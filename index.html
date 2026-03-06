@@ -775,11 +775,14 @@
   <div id="dashTab-fulfillment" style="padding:16px 24px;">
 
     <!-- Revenue Hero Banner -->
-    <div style="background:linear-gradient(135deg, #1a5a0a 0%, #2a8a1a 50%, #1a7a2a 100%); border-radius:10px; padding:20px 28px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,0.15);">
-      <div>
-        <div style="color:rgba(255,255,255,0.8); font-size:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">💰 While you were sleeping...</div>
-        <div style="color:#fff; font-size:36px; font-weight:bold; letter-spacing:-1px;" id="heroRevenue">$1,013.30</div>
-        <div style="color:rgba(255,255,255,0.75); font-size:13px; margin-top:4px;"><strong style="color:#fff;">30 customers</strong> purchased supplements · 8:07 PM – 1:43 AM · zero effort · zero staff</div>
+    <div style="background:linear-gradient(135deg, #1a5a0a 0%, #2e8b1a 100%); border-radius:12px; padding:24px 32px; margin-bottom:18px; box-shadow:0 6px 24px rgba(0,0,0,0.18);">
+      <div style="color:rgba(255,255,255,0.75); font-size:12px; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">💰 While you were sleeping last night...</div>
+      <div style="display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;">
+        <div id="heroRevenue" style="color:#fff; font-size:56px; font-weight:900; letter-spacing:-2px; line-height:1;">$1,013.30</div>
+        <div style="color:rgba(255,255,255,0.8); font-size:16px; font-weight:500;">in supplement sales</div>
+      </div>
+      <div style="color:rgba(255,255,255,0.65); font-size:13px; margin-top:10px;">
+        <span id="heroCount" style="color:#a8f0a0; font-weight:bold;">30 customers</span> purchased online &nbsp;·&nbsp; 8:07 PM – 1:43 AM &nbsp;·&nbsp; zero effort &nbsp;·&nbsp; zero staff
       </div>
     </div>
 
@@ -1623,7 +1626,8 @@
 
   function addLiveJourneyRow(patientName, drugName, supplementName) {
     const now = new Date();
-    const t = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    const h = now.getHours(), m = now.getMinutes().toString().padStart(2,'0');
+    const t = (h % 12 || 12) + ':' + m + ' ' + (h < 12 ? 'AM' : 'PM');
 
     // Prepend to analytics journey table
     const tbody = document.getElementById('journeyTableBody');
@@ -1640,15 +1644,19 @@
       <td style="padding:8px 10px; text-align:right; color:#aaa;">—</td>`;
     tbody.insertBefore(tr, tbody.firstChild);
 
-    // Prepend to fulfillment queue data so it shows first when tab is opened
-    fulfillOrders.unshift({
-      name: patientName,
-      phone: document.getElementById('patientPhone').value,
-      time: t,
-      rx: drugName,
-      supp: supplementName,
-      total: parseFloat(document.getElementById('billTotal').textContent.replace('$','')) || 0
-    });
+    // Prepend to fulfillment queue — mark as live so re-inits don't duplicate
+    const existing = fulfillOrders.find(o => o._live && o.name === patientName && o.rx === drugName);
+    if (!existing) {
+      fulfillOrders.unshift({
+        _live: true,
+        name: patientName,
+        phone: document.getElementById('patientPhone').value,
+        time: t,
+        rx: drugName,
+        supp: supplementName,
+        total: parseFloat(document.getElementById('billTotal').textContent.replace('$','')) || 0
+      });
+    }
 
     // bump KPIs
     const smsEl = document.getElementById('kpiSms');
@@ -1668,7 +1676,7 @@
       document.getElementById('fulfillDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
       const totalRev = fulfillOrders.reduce((s, o) => s + o.total, 0);
       document.getElementById('heroRevenue').textContent = '$' + totalRev.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      document.getElementById('heroShare').textContent = '$' + (totalRev * 0.20).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      document.getElementById('heroCount').textContent = fulfillOrders.length + ' customers';
       initFulfillTable();
     }
     if (tab === 'analytics') {
