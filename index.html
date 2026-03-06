@@ -1052,9 +1052,6 @@
     document.getElementById('billTotal').textContent = '$' + total.toFixed(2);
   }
 
-  // Init drug info on load
-  updateDrugInfo();
-
   const patients = [
     { name: "Itzik Ben",         email: "itzik.ben@gmail.com",          phone: "(212) 555-0101", dob: "1967", ins: "Humana Health Plan - 610649",         rxBy: "Barrett, Steven, M.D.",     rxAddr: "1401 Albrecht Blvd N Fargo, ND 58",      rxPhone: "(701) 231-6734" },
     { name: "James Anderson",    email: "j.anderson@yahoo.com",          phone: "(312) 555-0142", dob: "1975", ins: "Blue Cross Blue Shield - 204831",     rxBy: "Nguyen, Lisa, M.D.",          rxAddr: "820 N Michigan Ave Chicago, IL 60611",    rxPhone: "(312) 440-5500" },
@@ -1169,6 +1166,8 @@
   // Load first patient on init
   sel.selectedIndex = 0;
   loadPatient(0);
+  // Init drug info after item select is populated
+  updateDrugInfo();
 
   function loadPatient(idx) {
     const p = patients[idx];
