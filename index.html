@@ -1663,28 +1663,6 @@
     smsEl.textContent = parseInt(smsEl.textContent) + 1;
   }
 
-  function switchDashTab(tab) {
-    ['analytics','fulfillment'].forEach(t => {
-      document.getElementById('dashTab-' + t).style.display = t === tab ? '' : 'none';
-      const dt = document.getElementById('dtab-' + t);
-      dt.style.color = t === tab ? '#2b5fa6' : '#666';
-      dt.style.borderBottom = t === tab ? '3px solid #2b5fa6' : '3px solid transparent';
-      dt.style.fontWeight = t === tab ? 'bold' : 'normal';
-    });
-    if (tab === 'fulfillment') {
-      const now = new Date();
-      document.getElementById('fulfillDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
-      const totalRev = fulfillOrders.reduce((s, o) => s + o.total, 0);
-      document.getElementById('heroRevenue').textContent = '$' + totalRev.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      document.getElementById('heroCount').textContent = fulfillOrders.length + ' customers';
-      initFulfillTable();
-    }
-    if (tab === 'analytics') {
-      const now = new Date();
-      document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-    }
-  }
-
   // ── Fulfillment queue data (30 orders) ──
   const fulfillOrders = [
     { name:'Linda Jones',       phone:'(415) 555-0347', time:'8:07 PM',  rx:'Atorvastatin 10mg',        supp:'CoQ10 200mg + Vitamin D3 2000IU',              total:38.40 },
@@ -1720,6 +1698,28 @@
   ];
 
   let packedSet = new Set();
+
+  function switchDashTab(tab) {
+    ['analytics','fulfillment'].forEach(t => {
+      document.getElementById('dashTab-' + t).style.display = t === tab ? '' : 'none';
+      const dt = document.getElementById('dtab-' + t);
+      dt.style.color = t === tab ? '#2b5fa6' : '#666';
+      dt.style.borderBottom = t === tab ? '3px solid #2b5fa6' : '3px solid transparent';
+      dt.style.fontWeight = t === tab ? 'bold' : 'normal';
+    });
+    if (tab === 'fulfillment') {
+      const now = new Date();
+      document.getElementById('fulfillDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      const totalRev = fulfillOrders.reduce((s, o) => s + o.total, 0);
+      document.getElementById('heroRevenue').textContent = '$' + totalRev.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      document.getElementById('heroCount').textContent = fulfillOrders.length + ' customers';
+      initFulfillTable();
+    }
+    if (tab === 'analytics') {
+      const now = new Date();
+      document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    }
+  }
 
   function initFulfillTable() {
     const tbody = document.getElementById('fulfillTableBody');
