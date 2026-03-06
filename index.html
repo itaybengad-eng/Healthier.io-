@@ -485,7 +485,7 @@
             </div>
             <div class="form-row">
               <label>Item:</label>
-              <select id="itemSelect" onchange="updateDrugInfo()">
+              <select>
                 <option>Escitalopram 10 mg</option>
                 <option>Atorvastatin 10 mg</option>
                 <option>Atorvastatin 20 mg</option>
@@ -609,7 +609,7 @@
             </div>
             <div class="form-row">
               <label>Quantity:</label>
-              <input type="text" id="qtyInput" value="30" style="max-width:80px;" oninput="updateDrugInfo()" />
+              <input type="text" value="30" style="max-width:80px;" />
               <span class="refills-label">Refills:</span>
               <input type="text" value="3" class="refills-input" />
             </div>
@@ -639,11 +639,11 @@
 
         <!-- Drug Card - Active -->
         <div class="drug-card">
-          <div class="drug-name" id="drugCardName">Escitalopram 10 mg (Active)</div>
+          <div class="drug-name">Escitalopram 10 mg (Active)</div>
           <div class="drug-grid">
             <div class="drug-field">
-              <div class="field-label">Unit Price</div>
-              <div class="field-value" id="drugUnitPrice">$0.00</div>
+              <div class="field-label">MAC</div>
+              <div class="field-value">$0.00</div>
             </div>
             <div class="drug-field">
               <div class="field-label">BOH / EOH</div>
@@ -651,7 +651,7 @@
             </div>
             <div class="drug-field">
               <div class="field-label">Quantity</div>
-              <div class="field-value" id="drugQty">30</div>
+              <div class="field-value">30</div>
             </div>
             <div class="drug-field">
               <div class="field-label">PS</div>
@@ -675,11 +675,11 @@
         <!-- Billing Summary -->
         <div class="billing-card">
           <div class="billing-title">Billing Summary</div>
-          <div class="billing-row"><span>Base:</span><span id="billBase">$0.00</span></div>
-          <div class="billing-row"><span>Fee:</span><span id="billFee">$3.79</span></div>
-          <div class="billing-row"><span>Subtotal:</span><span id="billSubtotal">$0.00</span></div>
+          <div class="billing-row"><span>Base:</span><span>$51.00</span></div>
+          <div class="billing-row"><span>Fee:</span><span>$3.79</span></div>
+          <div class="billing-row"><span>Subtotal:</span><span>$54.79</span></div>
           <div class="billing-row"><span>Tax:</span><span>$0.00</span></div>
-          <div class="billing-row total"><span>Total:</span><span id="billTotal">$0.00</span></div>
+          <div class="billing-row total"><span>Total:</span><span>$54.79</span></div>
           <div class="billing-row" style="margin-top:6px; color:#888;">
             <span>Submitted</span><span>Paid</span>
           </div>
@@ -698,160 +698,6 @@
 </div>
 
 <script>
-  // Drug price database (average US market price per unit/tablet, 30-count)
-  const drugPrices = {
-    "Escitalopram 10 mg": 0.47,
-    "Escitalopram 5 mg": 0.42,
-    "Escitalopram 20 mg": 0.55,
-    "Atorvastatin 10 mg": 0.13,
-    "Atorvastatin 20 mg": 0.15,
-    "Atorvastatin 40 mg": 0.17,
-    "Atorvastatin 80 mg": 0.20,
-    "Lisinopril 5 mg": 0.08,
-    "Lisinopril 10 mg": 0.09,
-    "Lisinopril 20 mg": 0.10,
-    "Lisinopril 40 mg": 0.13,
-    "Levothyroxine 25 mcg": 0.37,
-    "Levothyroxine 50 mcg": 0.40,
-    "Levothyroxine 75 mcg": 0.43,
-    "Levothyroxine 100 mcg": 0.47,
-    "Metformin 500 mg": 0.06,
-    "Metformin 850 mg": 0.08,
-    "Metformin 1000 mg": 0.10,
-    "Amlodipine 2.5 mg": 0.10,
-    "Amlodipine 5 mg": 0.12,
-    "Amlodipine 10 mg": 0.14,
-    "Metoprolol Succinate 25 mg": 0.23,
-    "Metoprolol Succinate 50 mg": 0.27,
-    "Metoprolol Succinate 100 mg": 0.33,
-    "Metoprolol Tartrate 25 mg": 0.10,
-    "Metoprolol Tartrate 50 mg": 0.12,
-    "Omeprazole 10 mg": 0.17,
-    "Omeprazole 20 mg": 0.20,
-    "Omeprazole 40 mg": 0.27,
-    "Simvastatin 10 mg": 0.10,
-    "Simvastatin 20 mg": 0.12,
-    "Simvastatin 40 mg": 0.15,
-    "Losartan 25 mg": 0.13,
-    "Losartan 50 mg": 0.17,
-    "Losartan 100 mg": 0.22,
-    "Albuterol HFA 90 mcg Inhaler": 25.00,
-    "Gabapentin 100 mg": 0.12,
-    "Gabapentin 300 mg": 0.17,
-    "Gabapentin 400 mg": 0.20,
-    "Gabapentin 600 mg": 0.27,
-    "Hydrochlorothiazide 12.5 mg": 0.07,
-    "Hydrochlorothiazide 25 mg": 0.08,
-    "Sertraline 25 mg": 0.20,
-    "Sertraline 50 mg": 0.23,
-    "Sertraline 100 mg": 0.28,
-    "Montelukast 4 mg": 0.43,
-    "Montelukast 5 mg": 0.47,
-    "Montelukast 10 mg": 0.53,
-    "Pantoprazole 20 mg": 0.20,
-    "Pantoprazole 40 mg": 0.27,
-    "Bupropion HCl 75 mg": 0.20,
-    "Bupropion HCl 100 mg": 0.23,
-    "Bupropion XL 150 mg": 0.47,
-    "Bupropion XL 300 mg": 0.73,
-    "Furosemide 20 mg": 0.07,
-    "Furosemide 40 mg": 0.08,
-    "Furosemide 80 mg": 0.13,
-    "Fluticasone Nasal 50 mcg Spray": 18.00,
-    "Tramadol 50 mg": 0.23,
-    "Tramadol 100 mg": 0.37,
-    "Trazodone 50 mg": 0.17,
-    "Trazodone 100 mg": 0.23,
-    "Trazodone 150 mg": 0.33,
-    "Cyclobenzaprine 5 mg": 0.17,
-    "Cyclobenzaprine 10 mg": 0.20,
-    "Alprazolam 0.25 mg": 0.20,
-    "Alprazolam 0.5 mg": 0.23,
-    "Alprazolam 1 mg": 0.30,
-    "Clonazepam 0.5 mg": 0.17,
-    "Clonazepam 1 mg": 0.20,
-    "Clonazepam 2 mg": 0.27,
-    "Amoxicillin 250 mg": 0.13,
-    "Amoxicillin 500 mg": 0.17,
-    "Amoxicillin 875 mg": 0.23,
-    "Azithromycin 250 mg": 0.83,
-    "Azithromycin 500 mg": 1.33,
-    "Doxycycline Hyclate 50 mg": 0.37,
-    "Doxycycline Hyclate 100 mg": 0.57,
-    "Prednisone 5 mg": 0.10,
-    "Prednisone 10 mg": 0.13,
-    "Prednisone 20 mg": 0.17,
-    "Methylprednisolone 4 mg": 0.47,
-    "Ibuprofen 200 mg": 0.07,
-    "Ibuprofen 400 mg": 0.10,
-    "Ibuprofen 600 mg": 0.13,
-    "Ibuprofen 800 mg": 0.17,
-    "Naproxen 220 mg": 0.10,
-    "Naproxen 250 mg": 0.13,
-    "Naproxen 500 mg": 0.20,
-    "Rosuvastatin 5 mg": 0.20,
-    "Rosuvastatin 10 mg": 0.27,
-    "Rosuvastatin 20 mg": 0.33,
-    "Rosuvastatin 40 mg": 0.43,
-    "Clopidogrel 75 mg": 0.27,
-    "Aspirin 81 mg": 0.03,
-    "Aspirin 325 mg": 0.05,
-    "Tamsulosin 0.4 mg": 0.27,
-    "Carvedilol 3.125 mg": 0.17,
-    "Carvedilol 6.25 mg": 0.20,
-    "Carvedilol 12.5 mg": 0.23,
-    "Carvedilol 25 mg": 0.27,
-    "Venlafaxine XR 37.5 mg": 0.37,
-    "Venlafaxine XR 75 mg": 0.47,
-    "Venlafaxine XR 150 mg": 0.63,
-    "Duloxetine 20 mg": 0.43,
-    "Duloxetine 30 mg": 0.53,
-    "Duloxetine 60 mg": 0.70,
-    "Fluoxetine 10 mg": 0.13,
-    "Fluoxetine 20 mg": 0.17,
-    "Fluoxetine 40 mg": 0.23,
-    "Zolpidem 5 mg": 0.27,
-    "Zolpidem 10 mg": 0.37,
-    "Warfarin 1 mg": 0.17,
-    "Warfarin 2 mg": 0.20,
-    "Warfarin 2.5 mg": 0.22,
-    "Warfarin 5 mg": 0.27,
-    "Warfarin 10 mg": 0.33,
-    "Lisinopril/HCTZ 10/12.5 mg": 0.17,
-    "Lisinopril/HCTZ 20/12.5 mg": 0.20,
-  };
-
-  const FEE = 3.79;
-
-  // Populate item select from drugPrices keys
-  const itemSel = document.getElementById('itemSelect');
-  Object.keys(drugPrices).forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    itemSel.appendChild(opt);
-  });
-
-  function updateDrugInfo() {
-    const name = itemSel.value;
-    const qty = parseInt(document.getElementById('qtyInput').value) || 30;
-    const unitPrice = drugPrices[name] || 0;
-    const isInhaler = name.includes('Inhaler') || name.includes('Spray');
-    const base = isInhaler ? unitPrice : parseFloat((unitPrice * qty).toFixed(2));
-    const subtotal = parseFloat((base + FEE).toFixed(2));
-
-    document.getElementById('drugCardName').textContent = name + ' (Active)';
-    document.getElementById('drugUnitPrice').textContent = '$' + unitPrice.toFixed(2);
-    document.getElementById('drugQty').textContent = qty;
-    document.getElementById('billBase').textContent = '$' + base.toFixed(2);
-    document.getElementById('billFee').textContent = '$' + FEE.toFixed(2);
-    document.getElementById('billSubtotal').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('billTotal').textContent = '$' + subtotal.toFixed(2);
-  }
-
-  // Init drug info on load
-  updateDrugInfo();
-
   const patients = [
     { name: "Itzik Ben",         email: "itzik.ben@gmail.com",          phone: "(212) 555-0101", dob: "1967", ins: "Humana Health Plan - 610649",         rxBy: "Barrett, Steven, M.D.",     rxAddr: "1401 Albrecht Blvd N Fargo, ND 58",      rxPhone: "(701) 231-6734" },
     { name: "James Anderson",    email: "j.anderson@yahoo.com",          phone: "(312) 555-0142", dob: "1975", ins: "Blue Cross Blue Shield - 204831",     rxBy: "Nguyen, Lisa, M.D.",          rxAddr: "820 N Michigan Ave Chicago, IL 60611",    rxPhone: "(312) 440-5500" },
@@ -991,4 +837,3 @@
 
 </body>
 </html>
-
