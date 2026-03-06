@@ -154,6 +154,9 @@
       padding: 6px 8px;
       background: #e8e8e8;
       border-bottom: 1px solid #ccc;
+      flex-wrap: nowrap;
+      overflow: visible;
+      align-items: center;
     }
     .action-btn {
       background: #3a6ec0;
@@ -415,7 +418,7 @@
       <button class="action-btn">Rx Edit <span class="num">[5]</span></button>
       <button class="action-btn">Fill Audit <span class="num">[6]</span></button>
       <div style="flex:1;"></div>
-      <button class="action-btn" id="dispenseChargeBtn" onclick="openReceiptModal()" style="background:#1a7a2a; font-size:13px; padding:5px 18px; letter-spacing:0.3px;">💊 Dispense &amp; Charge</button>
+      <button id="dispenseChargeBtn" onclick="openReceiptModal()" style="background:#1a7a2a; color:#fff; border:none; padding:5px 20px; border-radius:4px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;">💊 Dispense &amp; Charge</button>
     </div>
 
     <!-- CONTENT AREA -->
