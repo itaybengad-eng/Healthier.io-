@@ -485,7 +485,7 @@
             </div>
             <div class="form-row">
               <label>Item:</label>
-              <select>
+              <select id="itemSelect" onchange="updateDrugInfo()">
                 <option>Escitalopram 10 mg</option>
                 <option>Atorvastatin 10 mg</option>
                 <option>Atorvastatin 20 mg</option>
@@ -609,7 +609,7 @@
             </div>
             <div class="form-row">
               <label>Quantity:</label>
-              <input type="text" value="30" style="max-width:80px;" />
+              <input type="text" id="qtyInput" value="30" style="max-width:80px;" oninput="updateDrugInfo()" />
               <span class="refills-label">Refills:</span>
               <input type="text" value="3" class="refills-input" />
             </div>
@@ -639,11 +639,11 @@
 
         <!-- Drug Card - Active -->
         <div class="drug-card">
-          <div class="drug-name">Escitalopram 10 mg (Active)</div>
+          <div class="drug-name" id="drugCardName">Escitalopram 10 mg (Active)</div>
           <div class="drug-grid">
             <div class="drug-field">
-              <div class="field-label">MAC</div>
-              <div class="field-value">$0.00</div>
+              <div class="field-label">Unit Price</div>
+              <div class="field-value" id="drugUnitPrice">$0.00</div>
             </div>
             <div class="drug-field">
               <div class="field-label">BOH / EOH</div>
@@ -651,7 +651,7 @@
             </div>
             <div class="drug-field">
               <div class="field-label">Quantity</div>
-              <div class="field-value">30</div>
+              <div class="field-value" id="drugQty">30</div>
             </div>
             <div class="drug-field">
               <div class="field-label">PS</div>
@@ -663,11 +663,11 @@
             </div>
             <div class="drug-field">
               <div class="field-label">Day Supply</div>
-              <div class="field-value"><input class="day-supply-input" type="text" value="30" /></div>
+              <div class="field-value"><input class="day-supply-input" id="daySupplyInput" type="text" value="30" /></div>
             </div>
             <div class="drug-field" style="grid-column: span 2;">
               <div class="field-label">Do Not Use After</div>
-              <div class="field-value">12/27/2024</div>
+              <div class="field-value" id="doNotUseAfter">—</div>
             </div>
           </div>
         </div>
@@ -675,11 +675,11 @@
         <!-- Billing Summary -->
         <div class="billing-card">
           <div class="billing-title">Billing Summary</div>
-          <div class="billing-row"><span>Base:</span><span>$51.00</span></div>
-          <div class="billing-row"><span>Fee:</span><span>$3.79</span></div>
-          <div class="billing-row"><span>Subtotal:</span><span>$54.79</span></div>
-          <div class="billing-row"><span>Tax:</span><span>$0.00</span></div>
-          <div class="billing-row total"><span>Total:</span><span>$54.79</span></div>
+          <div class="billing-row"><span>Base:</span><span id="billBase">$0.00</span></div>
+          <div class="billing-row"><span>Fee:</span><span id="billFee">$3.79</span></div>
+          <div class="billing-row"><span>Subtotal:</span><span id="billSubtotal">$0.00</span></div>
+          <div class="billing-row"><span>Tax (NY):</span><span id="billTax">$0.00</span></div>
+          <div class="billing-row total"><span>Total:</span><span id="billTotal">$0.00</span></div>
           <div class="billing-row" style="margin-top:6px; color:#888;">
             <span>Submitted</span><span>Paid</span>
           </div>
@@ -698,6 +698,321 @@
 </div>
 
 <script>
+  // Drug price database (average US market price per unit/tablet, 30-count)
+  const drugPrices = {
+    "Escitalopram 10 mg": 0.47,
+    "Escitalopram 5 mg": 0.42,
+    "Escitalopram 20 mg": 0.55,
+    "Atorvastatin 10 mg": 0.13,
+    "Atorvastatin 20 mg": 0.15,
+    "Atorvastatin 40 mg": 0.17,
+    "Atorvastatin 80 mg": 0.20,
+    "Lisinopril 5 mg": 0.08,
+    "Lisinopril 10 mg": 0.09,
+    "Lisinopril 20 mg": 0.10,
+    "Lisinopril 40 mg": 0.13,
+    "Levothyroxine 25 mcg": 0.37,
+    "Levothyroxine 50 mcg": 0.40,
+    "Levothyroxine 75 mcg": 0.43,
+    "Levothyroxine 100 mcg": 0.47,
+    "Metformin 500 mg": 0.06,
+    "Metformin 850 mg": 0.08,
+    "Metformin 1000 mg": 0.10,
+    "Amlodipine 2.5 mg": 0.10,
+    "Amlodipine 5 mg": 0.12,
+    "Amlodipine 10 mg": 0.14,
+    "Metoprolol Succinate 25 mg": 0.23,
+    "Metoprolol Succinate 50 mg": 0.27,
+    "Metoprolol Succinate 100 mg": 0.33,
+    "Metoprolol Tartrate 25 mg": 0.10,
+    "Metoprolol Tartrate 50 mg": 0.12,
+    "Omeprazole 10 mg": 0.17,
+    "Omeprazole 20 mg": 0.20,
+    "Omeprazole 40 mg": 0.27,
+    "Simvastatin 10 mg": 0.10,
+    "Simvastatin 20 mg": 0.12,
+    "Simvastatin 40 mg": 0.15,
+    "Losartan 25 mg": 0.13,
+    "Losartan 50 mg": 0.17,
+    "Losartan 100 mg": 0.22,
+    "Albuterol HFA 90 mcg Inhaler": 25.00,
+    "Gabapentin 100 mg": 0.12,
+    "Gabapentin 300 mg": 0.17,
+    "Gabapentin 400 mg": 0.20,
+    "Gabapentin 600 mg": 0.27,
+    "Hydrochlorothiazide 12.5 mg": 0.07,
+    "Hydrochlorothiazide 25 mg": 0.08,
+    "Sertraline 25 mg": 0.20,
+    "Sertraline 50 mg": 0.23,
+    "Sertraline 100 mg": 0.28,
+    "Montelukast 4 mg": 0.43,
+    "Montelukast 5 mg": 0.47,
+    "Montelukast 10 mg": 0.53,
+    "Pantoprazole 20 mg": 0.20,
+    "Pantoprazole 40 mg": 0.27,
+    "Bupropion HCl 75 mg": 0.20,
+    "Bupropion HCl 100 mg": 0.23,
+    "Bupropion XL 150 mg": 0.47,
+    "Bupropion XL 300 mg": 0.73,
+    "Furosemide 20 mg": 0.07,
+    "Furosemide 40 mg": 0.08,
+    "Furosemide 80 mg": 0.13,
+    "Fluticasone Nasal 50 mcg Spray": 18.00,
+    "Tramadol 50 mg": 0.23,
+    "Tramadol 100 mg": 0.37,
+    "Trazodone 50 mg": 0.17,
+    "Trazodone 100 mg": 0.23,
+    "Trazodone 150 mg": 0.33,
+    "Cyclobenzaprine 5 mg": 0.17,
+    "Cyclobenzaprine 10 mg": 0.20,
+    "Alprazolam 0.25 mg": 0.20,
+    "Alprazolam 0.5 mg": 0.23,
+    "Alprazolam 1 mg": 0.30,
+    "Clonazepam 0.5 mg": 0.17,
+    "Clonazepam 1 mg": 0.20,
+    "Clonazepam 2 mg": 0.27,
+    "Amoxicillin 250 mg": 0.13,
+    "Amoxicillin 500 mg": 0.17,
+    "Amoxicillin 875 mg": 0.23,
+    "Azithromycin 250 mg": 0.83,
+    "Azithromycin 500 mg": 1.33,
+    "Doxycycline Hyclate 50 mg": 0.37,
+    "Doxycycline Hyclate 100 mg": 0.57,
+    "Prednisone 5 mg": 0.10,
+    "Prednisone 10 mg": 0.13,
+    "Prednisone 20 mg": 0.17,
+    "Methylprednisolone 4 mg": 0.47,
+    "Ibuprofen 200 mg": 0.07,
+    "Ibuprofen 400 mg": 0.10,
+    "Ibuprofen 600 mg": 0.13,
+    "Ibuprofen 800 mg": 0.17,
+    "Naproxen 220 mg": 0.10,
+    "Naproxen 250 mg": 0.13,
+    "Naproxen 500 mg": 0.20,
+    "Rosuvastatin 5 mg": 0.20,
+    "Rosuvastatin 10 mg": 0.27,
+    "Rosuvastatin 20 mg": 0.33,
+    "Rosuvastatin 40 mg": 0.43,
+    "Clopidogrel 75 mg": 0.27,
+    "Aspirin 81 mg": 0.03,
+    "Aspirin 325 mg": 0.05,
+    "Tamsulosin 0.4 mg": 0.27,
+    "Carvedilol 3.125 mg": 0.17,
+    "Carvedilol 6.25 mg": 0.20,
+    "Carvedilol 12.5 mg": 0.23,
+    "Carvedilol 25 mg": 0.27,
+    "Venlafaxine XR 37.5 mg": 0.37,
+    "Venlafaxine XR 75 mg": 0.47,
+    "Venlafaxine XR 150 mg": 0.63,
+    "Duloxetine 20 mg": 0.43,
+    "Duloxetine 30 mg": 0.53,
+    "Duloxetine 60 mg": 0.70,
+    "Fluoxetine 10 mg": 0.13,
+    "Fluoxetine 20 mg": 0.17,
+    "Fluoxetine 40 mg": 0.23,
+    "Zolpidem 5 mg": 0.27,
+    "Zolpidem 10 mg": 0.37,
+    "Warfarin 1 mg": 0.17,
+    "Warfarin 2 mg": 0.20,
+    "Warfarin 2.5 mg": 0.22,
+    "Warfarin 5 mg": 0.27,
+    "Warfarin 10 mg": 0.33,
+    "Lisinopril/HCTZ 10/12.5 mg": 0.17,
+    "Lisinopril/HCTZ 20/12.5 mg": 0.20,
+  };
+
+  const FEE = 3.79;
+  // NY tax: prescription drugs are tax-exempt; OTC drugs taxed at 8.875% (NYC combined rate)
+  const NY_OTC_TAX = 0.08875;
+  // OTC drugs (non-prescription)
+  const OTC_DRUGS = new Set([
+    "Ibuprofen 200 mg","Ibuprofen 400 mg","Ibuprofen 600 mg","Ibuprofen 800 mg",
+    "Naproxen 220 mg","Naproxen 250 mg","Naproxen 500 mg",
+    "Aspirin 81 mg","Aspirin 325 mg",
+    "Omeprazole 10 mg","Omeprazole 20 mg","Omeprazole 40 mg",
+  ]);
+
+  // Drug metadata: { qty (standard pack), daySupply, shelfMonths (months from today) }
+  const drugMeta = {
+    // Antidepressants/Anxiolytics - 30 tabs, 30 day supply, 2yr shelf
+    "Escitalopram 10 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Escitalopram 5 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Escitalopram 20 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Sertraline 25 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Sertraline 50 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Sertraline 100 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Fluoxetine 10 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Fluoxetine 20 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Fluoxetine 40 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Bupropion HCl 75 mg":       { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Bupropion HCl 100 mg":      { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Bupropion XL 150 mg":       { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Bupropion XL 300 mg":       { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Venlafaxine XR 37.5 mg":    { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Venlafaxine XR 75 mg":      { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Venlafaxine XR 150 mg":     { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Duloxetine 20 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Duloxetine 30 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Duloxetine 60 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Trazodone 50 mg":           { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Trazodone 100 mg":          { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Trazodone 150 mg":          { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Alprazolam 0.25 mg":        { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Alprazolam 0.5 mg":         { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Alprazolam 1 mg":           { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Clonazepam 0.5 mg":         { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Clonazepam 1 mg":           { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Clonazepam 2 mg":           { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Zolpidem 5 mg":             { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Zolpidem 10 mg":            { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    // Statins - 30 tabs, 30 day supply, 2yr shelf
+    "Atorvastatin 10 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Atorvastatin 20 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Atorvastatin 40 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Atorvastatin 80 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Simvastatin 10 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Simvastatin 20 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Simvastatin 40 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Rosuvastatin 5 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Rosuvastatin 10 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Rosuvastatin 20 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Rosuvastatin 40 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    // BP / Heart
+    "Lisinopril 5 mg":           { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Lisinopril 10 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Lisinopril 20 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Lisinopril 40 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Lisinopril/HCTZ 10/12.5 mg":{ qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Lisinopril/HCTZ 20/12.5 mg":{ qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Amlodipine 2.5 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Amlodipine 5 mg":           { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Amlodipine 10 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Metoprolol Succinate 25 mg":{ qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Metoprolol Succinate 50 mg":{ qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Metoprolol Succinate 100 mg":{ qty: 30, daySupply: 30, shelfMonths: 36 },
+    "Metoprolol Tartrate 25 mg": { qty: 60,  daySupply: 30, shelfMonths: 36 },
+    "Metoprolol Tartrate 50 mg": { qty: 60,  daySupply: 30, shelfMonths: 36 },
+    "Carvedilol 3.125 mg":       { qty: 60,  daySupply: 30, shelfMonths: 24 },
+    "Carvedilol 6.25 mg":        { qty: 60,  daySupply: 30, shelfMonths: 24 },
+    "Carvedilol 12.5 mg":        { qty: 60,  daySupply: 30, shelfMonths: 24 },
+    "Carvedilol 25 mg":          { qty: 60,  daySupply: 30, shelfMonths: 24 },
+    "Losartan 25 mg":            { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Losartan 50 mg":            { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Losartan 100 mg":           { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Hydrochlorothiazide 12.5 mg":{ qty: 30, daySupply: 30, shelfMonths: 24 },
+    "Hydrochlorothiazide 25 mg": { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Furosemide 20 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Furosemide 40 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Furosemide 80 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Clopidogrel 75 mg":         { qty: 30,  daySupply: 30, shelfMonths: 36 },
+    "Warfarin 1 mg":             { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Warfarin 2 mg":             { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Warfarin 2.5 mg":           { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Warfarin 5 mg":             { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Warfarin 10 mg":            { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Tamsulosin 0.4 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    // Diabetes
+    "Metformin 500 mg":          { qty: 60,  daySupply: 30, shelfMonths: 36 },
+    "Metformin 850 mg":          { qty: 60,  daySupply: 30, shelfMonths: 36 },
+    "Metformin 1000 mg":         { qty: 60,  daySupply: 30, shelfMonths: 36 },
+    // Thyroid
+    "Levothyroxine 25 mcg":      { qty: 30,  daySupply: 30, shelfMonths: 12 },
+    "Levothyroxine 50 mcg":      { qty: 30,  daySupply: 30, shelfMonths: 12 },
+    "Levothyroxine 75 mcg":      { qty: 30,  daySupply: 30, shelfMonths: 12 },
+    "Levothyroxine 100 mcg":     { qty: 30,  daySupply: 30, shelfMonths: 12 },
+    // GI
+    "Omeprazole 10 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Omeprazole 20 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Omeprazole 40 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Pantoprazole 20 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Pantoprazole 40 mg":        { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    // Respiratory
+    "Albuterol HFA 90 mcg Inhaler": { qty: 1, daySupply: 30, shelfMonths: 24 },
+    "Fluticasone Nasal 50 mcg Spray":{ qty: 1, daySupply: 30, shelfMonths: 24 },
+    "Montelukast 4 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Montelukast 5 mg":          { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    "Montelukast 10 mg":         { qty: 30,  daySupply: 30, shelfMonths: 24 },
+    // Pain / Neuro
+    "Gabapentin 100 mg":         { qty: 90,  daySupply: 30, shelfMonths: 36 },
+    "Gabapentin 300 mg":         { qty: 90,  daySupply: 30, shelfMonths: 36 },
+    "Gabapentin 400 mg":         { qty: 90,  daySupply: 30, shelfMonths: 36 },
+    "Gabapentin 600 mg":         { qty: 90,  daySupply: 30, shelfMonths: 36 },
+    "Tramadol 50 mg":            { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Tramadol 100 mg":           { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Cyclobenzaprine 5 mg":      { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Cyclobenzaprine 10 mg":     { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Ibuprofen 200 mg":          { qty: 100, daySupply: 30, shelfMonths: 36 },
+    "Ibuprofen 400 mg":          { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Ibuprofen 600 mg":          { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Ibuprofen 800 mg":          { qty: 30,  daySupply: 10, shelfMonths: 36 },
+    "Naproxen 220 mg":           { qty: 100, daySupply: 30, shelfMonths: 36 },
+    "Naproxen 250 mg":           { qty: 30,  daySupply: 15, shelfMonths: 36 },
+    "Naproxen 500 mg":           { qty: 30,  daySupply: 15, shelfMonths: 36 },
+    "Aspirin 81 mg":             { qty: 90,  daySupply: 90, shelfMonths: 36 },
+    "Aspirin 325 mg":            { qty: 100, daySupply: 30, shelfMonths: 36 },
+    // Antibiotics - shorter shelf
+    "Amoxicillin 250 mg":        { qty: 30,  daySupply: 10, shelfMonths: 12 },
+    "Amoxicillin 500 mg":        { qty: 21,  daySupply: 7,  shelfMonths: 12 },
+    "Amoxicillin 875 mg":        { qty: 20,  daySupply: 10, shelfMonths: 12 },
+    "Azithromycin 250 mg":       { qty: 6,   daySupply: 5,  shelfMonths: 12 },
+    "Azithromycin 500 mg":       { qty: 3,   daySupply: 3,  shelfMonths: 12 },
+    "Doxycycline Hyclate 50 mg": { qty: 30,  daySupply: 30, shelfMonths: 18 },
+    "Doxycycline Hyclate 100 mg":{ qty: 14,  daySupply: 7,  shelfMonths: 18 },
+    // Steroids - short course
+    "Prednisone 5 mg":           { qty: 21,  daySupply: 7,  shelfMonths: 24 },
+    "Prednisone 10 mg":          { qty: 21,  daySupply: 7,  shelfMonths: 24 },
+    "Prednisone 20 mg":          { qty: 10,  daySupply: 5,  shelfMonths: 24 },
+    "Methylprednisolone 4 mg":   { qty: 21,  daySupply: 6,  shelfMonths: 24 },
+  };
+
+  // Populate item select from drugPrices keys
+  const itemSel = document.getElementById('itemSelect');
+  Object.keys(drugPrices).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    itemSel.appendChild(opt);
+  });
+
+  function calcExpiryDate(shelfMonths) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + shelfMonths);
+    return (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getDate().toString().padStart(2,'0') + '/' + d.getFullYear();
+  }
+
+  function updateDrugInfo() {
+    const name = itemSel.value;
+    const meta = drugMeta[name] || { qty: 30, daySupply: 30, shelfMonths: 24 };
+    const unitPrice = drugPrices[name] || 0;
+    const isUnit = name.includes('Inhaler') || name.includes('Spray');
+
+    // Update quantity input to standard pack size
+    const qtyInput = document.getElementById('qtyInput');
+    qtyInput.value = meta.qty;
+
+    const qty = meta.qty;
+    const base = isUnit ? unitPrice : parseFloat((unitPrice * qty).toFixed(2));
+    const isOTC = OTC_DRUGS.has(name);
+    const taxAmt = isOTC ? parseFloat((base * NY_OTC_TAX).toFixed(2)) : 0.00;
+    const subtotal = parseFloat((base + FEE).toFixed(2));
+    const total = parseFloat((subtotal + taxAmt).toFixed(2));
+
+    document.getElementById('drugCardName').textContent = name + ' (Active)';
+    document.getElementById('drugUnitPrice').textContent = '$' + unitPrice.toFixed(2);
+    document.getElementById('drugQty').textContent = qty;
+    document.getElementById('daySupplyInput').value = meta.daySupply;
+    document.getElementById('doNotUseAfter').textContent = calcExpiryDate(meta.shelfMonths);
+    document.getElementById('billBase').textContent = '$' + base.toFixed(2);
+    document.getElementById('billFee').textContent = '$' + FEE.toFixed(2);
+    document.getElementById('billSubtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('billTax').textContent = isOTC ? '$' + taxAmt.toFixed(2) + ' (8.875% OTC)' : '$0.00 (Rx exempt)';
+    document.getElementById('billTotal').textContent = '$' + total.toFixed(2);
+  }
+
+  // Init drug info on load
+  updateDrugInfo();
+
   const patients = [
     { name: "Itzik Ben",         email: "itzik.ben@gmail.com",          phone: "(212) 555-0101", dob: "1967", ins: "Humana Health Plan - 610649",         rxBy: "Barrett, Steven, M.D.",     rxAddr: "1401 Albrecht Blvd N Fargo, ND 58",      rxPhone: "(701) 231-6734" },
     { name: "James Anderson",    email: "j.anderson@yahoo.com",          phone: "(312) 555-0142", dob: "1975", ins: "Blue Cross Blue Shield - 204831",     rxBy: "Nguyen, Lisa, M.D.",          rxAddr: "820 N Michigan Ave Chicago, IL 60611",    rxPhone: "(312) 440-5500" },
