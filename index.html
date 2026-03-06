@@ -347,16 +347,17 @@
 <!-- TOP NAV -->
 <div class="topnav">
   <div class="logo">Pharm<span>Rx</span></div>
-  <button class="nav-btn active">Rx</button>
-  <button class="nav-btn">Workflow</button>
-  <button class="nav-btn">Patient</button>
-  <button class="nav-btn">Third Party</button>
-  <button class="nav-btn">Account</button>
-  <button class="nav-btn">Sale</button>
-  <button class="nav-btn">Item</button>
-  <button class="nav-btn">Inventory</button>
-  <button class="nav-btn">Ordering</button>
-  <button class="nav-btn">Analysis</button>
+  <button class="nav-btn active" onclick="showView('rx', this)">Rx</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Workflow</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Patient</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Third Party</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Account</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Sale</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Item</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Inventory</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Ordering</button>
+  <button class="nav-btn" onclick="showView('rx', this)">Analysis</button>
+  <button class="nav-btn" id="pvjNavBtn" onclick="showView('dashboard', this)" style="background:#e05c00; margin-left:8px;">📱 Post Visit Journey</button>
   <div class="spacer"></div>
   <div class="sms-wrap">
     <span>📱 SMS</span>
@@ -371,6 +372,8 @@
   <button class="nav-dd">Reports</button>
 </div>
 
+<!-- RX VIEW -->
+<div id="rxView">
 <!-- LAYOUT -->
 <div class="layout">
 
@@ -576,7 +579,265 @@
   </div><!-- /main -->
 </div><!-- /layout -->
 
-<!-- ── RECEIPT MODAL ── -->
+</div><!-- /rxView -->
+
+<!-- DASHBOARD VIEW -->
+<div id="dashboardView" style="display:none; height:calc(100vh - 36px - 24px); overflow-y:auto; background:#f0f2f5; font-family:Arial,sans-serif;">
+
+  <!-- Dashboard Tab Bar -->
+  <div style="background:#fff; border-bottom:2px solid #ddd; display:flex; align-items:center; padding:0 24px; gap:0;">
+    <div onclick="switchDashTab('analytics')" id="dtab-analytics" style="padding:12px 20px; cursor:pointer; font-size:13px; font-weight:bold; color:#2b5fa6; border-bottom:3px solid #2b5fa6; margin-bottom:-2px;">📊 Analytics</div>
+    <div onclick="switchDashTab('fulfillment')" id="dtab-fulfillment" style="padding:12px 20px; cursor:pointer; font-size:13px; color:#666; border-bottom:3px solid transparent; margin-bottom:-2px;">📦 Morning Fulfillment Queue</div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div id="dashTab-analytics" style="padding:20px 24px;">
+
+  <!-- Header -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div>
+      <div style="font-size:18px; font-weight:bold; color:#1a1a2e;">📱 Post Visit Journey Dashboard</div>
+      <div style="font-size:12px; color:#888; margin-top:2px;">Concept Pharmacy · <span id="dashDate"></span></div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button onclick="setDashPeriod('today', this)" class="dash-period-btn active-period" style="padding:5px 14px; border-radius:4px; border:1px solid #ccc; background:#2b5fa6; color:#fff; font-size:12px; cursor:pointer;">Today</button>
+      <button onclick="setDashPeriod('week', this)" class="dash-period-btn" style="padding:5px 14px; border-radius:4px; border:1px solid #ccc; background:#fff; color:#444; font-size:12px; cursor:pointer;">This Week</button>
+      <button onclick="setDashPeriod('month', this)" class="dash-period-btn" style="padding:5px 14px; border-radius:4px; border:1px solid #ccc; background:#fff; color:#444; font-size:12px; cursor:pointer;">This Month</button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;">
+    <div style="background:#fff; border-radius:8px; padding:16px 18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Prescriptions Today</div>
+      <div id="kpiRx" style="font-size:28px; font-weight:bold; color:#2b5fa6; margin:6px 0;">24</div>
+      <div style="font-size:11px; color:#4a9a2a;">↑ 3 vs yesterday</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:16px 18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">SMS Sent</div>
+      <div id="kpiSms" style="font-size:28px; font-weight:bold; color:#ff6b00; margin:6px 0;">18</div>
+      <div style="font-size:11px; color:#888;">75% inclusion rate</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:16px 18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Conversions</div>
+      <div id="kpiConv" style="font-size:28px; font-weight:bold; color:#1a7a2a; margin:6px 0;">4</div>
+      <div style="font-size:11px; color:#888;">22% conversion rate</div>
+    </div>
+    <div style="background:#fff; border-radius:8px; padding:16px 18px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #ff6b00;">
+      <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Revenue Earned</div>
+      <div id="kpiRev" style="font-size:28px; font-weight:bold; color:#ff6b00; margin:6px 0;">$47.20</div>
+      <div style="font-size:11px; color:#4a9a2a;">↑ $12 vs yesterday</div>
+    </div>
+  </div>
+
+  <!-- Middle row: chart + top supplements -->
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:20px;">
+
+    <!-- Weekly trend chart -->
+    <div style="background:#fff; border-radius:8px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:14px;">Revenue This Week</div>
+      <div style="display:flex; align-items:flex-end; gap:10px; height:100px;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+          <div style="font-size:10px; color:#888;">$28</div>
+          <div style="background:#2b5fa6; width:100%; height:56px; border-radius:3px 3px 0 0;"></div>
+          <div style="font-size:10px; color:#888;">Mon</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+          <div style="font-size:10px; color:#888;">$35</div>
+          <div style="background:#2b5fa6; width:100%; height:70px; border-radius:3px 3px 0 0;"></div>
+          <div style="font-size:10px; color:#888;">Tue</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+          <div style="font-size:10px; color:#888;">$22</div>
+          <div style="background:#2b5fa6; width:100%; height:44px; border-radius:3px 3px 0 0;"></div>
+          <div style="font-size:10px; color:#888;">Wed</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+          <div style="font-size:10px; color:#888;">$41</div>
+          <div style="background:#2b5fa6; width:100%; height:82px; border-radius:3px 3px 0 0;"></div>
+          <div style="font-size:10px; color:#888;">Thu</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+          <div style="font-size:10px; color:#888;">$47</div>
+          <div style="background:#ff6b00; width:100%; height:94px; border-radius:3px 3px 0 0;"></div>
+          <div style="font-size:10px; color:#888; font-weight:bold;">Today</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top supplements -->
+    <div style="background:#fff; border-radius:8px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:14px;">Top Supplements Sold</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;"><span>CoQ10 200mg</span><span style="font-weight:bold;">6 units</span></div>
+          <div style="background:#eee; border-radius:3px; height:6px;"><div style="background:#ff6b00; width:85%; height:6px; border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;"><span>Omega-3 Fish Oil</span><span style="font-weight:bold;">5 units</span></div>
+          <div style="background:#eee; border-radius:3px; height:6px;"><div style="background:#ff6b00; width:70%; height:6px; border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;"><span>Magnesium Glycinate</span><span style="font-weight:bold;">4 units</span></div>
+          <div style="background:#eee; border-radius:3px; height:6px;"><div style="background:#ff6b00; width:57%; height:6px; border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;"><span>Probiotics 50B CFU</span><span style="font-weight:bold;">2 units</span></div>
+          <div style="background:#eee; border-radius:3px; height:6px;"><div style="background:#ff6b00; width:28%; height:6px; border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;"><span>Vitamin D3 2000IU</span><span style="font-weight:bold;">2 units</span></div>
+          <div style="background:#eee; border-radius:3px; height:6px;"><div style="background:#ff6b00; width:28%; height:6px; border-radius:3px;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent journeys table -->
+  <div style="background:#fff; border-radius:8px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+    <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:14px;">Recent Journeys</div>
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="border-bottom:2px solid #eee; color:#888; text-align:left;">
+          <th style="padding:6px 10px;">Time</th>
+          <th style="padding:6px 10px;">Patient</th>
+          <th style="padding:6px 10px;">Drug</th>
+          <th style="padding:6px 10px;">Supplement Offered</th>
+          <th style="padding:6px 10px;">SMS</th>
+          <th style="padding:6px 10px;">Status</th>
+          <th style="padding:6px 10px; text-align:right;">Revenue</th>
+        </tr>
+      </thead>
+      <tbody id="journeyTableBody">
+        <tr style="border-bottom:1px solid #f5f5f5;">
+          <td style="padding:8px 10px; color:#888;">09:14</td>
+          <td style="padding:8px 10px; font-weight:bold;">Linda Jones</td>
+          <td style="padding:8px 10px; color:#c07000;">Atorvastatin 10mg</td>
+          <td style="padding:8px 10px;">CoQ10 200mg + Vit D3</td>
+          <td style="padding:8px 10px;">✓ Sent</td>
+          <td style="padding:8px 10px;"><span style="background:#e8f5e9; color:#1a7a2a; padding:2px 8px; border-radius:10px; font-size:11px;">Purchased</span></td>
+          <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#1a7a2a;">$14.40</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f5f5f5;">
+          <td style="padding:8px 10px; color:#888;">10:02</td>
+          <td style="padding:8px 10px; font-weight:bold;">James Anderson</td>
+          <td style="padding:8px 10px; color:#c07000;">Metformin 500mg</td>
+          <td style="padding:8px 10px;">Vitamin B12 + ALA</td>
+          <td style="padding:8px 10px;">✓ Sent</td>
+          <td style="padding:8px 10px;"><span style="background:#fff3e0; color:#e65100; padding:2px 8px; border-radius:10px; font-size:11px;">Pending</span></td>
+          <td style="padding:8px 10px; text-align:right; color:#aaa;">—</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f5f5f5;">
+          <td style="padding:8px 10px; color:#888;">10:45</td>
+          <td style="padding:8px 10px; font-weight:bold;">Maria Garcia</td>
+          <td style="padding:8px 10px; color:#c07000;">Sertraline 50mg</td>
+          <td style="padding:8px 10px;">Omega-3 + Magnesium</td>
+          <td style="padding:8px 10px;">✓ Sent</td>
+          <td style="padding:8px 10px;"><span style="background:#e8f5e9; color:#1a7a2a; padding:2px 8px; border-radius:10px; font-size:11px;">Purchased</span></td>
+          <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#1a7a2a;">$18.60</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f5f5f5;">
+          <td style="padding:8px 10px; color:#888;">11:30</td>
+          <td style="padding:8px 10px; font-weight:bold;">Robert Johnson</td>
+          <td style="padding:8px 10px; color:#c07000;">Lisinopril 10mg</td>
+          <td style="padding:8px 10px;">Magnesium Glycinate</td>
+          <td style="padding:8px 10px; color:#aaa;">✕ Skipped</td>
+          <td style="padding:8px 10px;"><span style="background:#f5f5f5; color:#888; padding:2px 8px; border-radius:10px; font-size:11px;">Opted Out</span></td>
+          <td style="padding:8px 10px; text-align:right; color:#aaa;">—</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f5f5f5;">
+          <td style="padding:8px 10px; color:#888;">12:18</td>
+          <td style="padding:8px 10px; font-weight:bold;">Patricia Williams</td>
+          <td style="padding:8px 10px; color:#c07000;">Levothyroxine 50mcg</td>
+          <td style="padding:8px 10px;">Selenium + Vit D3</td>
+          <td style="padding:8px 10px;">✓ Sent</td>
+          <td style="padding:8px 10px;"><span style="background:#e8f5e9; color:#1a7a2a; padding:2px 8px; border-radius:10px; font-size:11px;">Purchased</span></td>
+          <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#1a7a2a;">$14.20</td>
+        </tr>
+        <tr id="liveJourneyRow" style="display:none; border-bottom:1px solid #f5f5f5; background:#fffbf0;">
+          <td style="padding:8px 10px; color:#888;" id="liveTime"></td>
+          <td style="padding:8px 10px; font-weight:bold;" id="liveName"></td>
+          <td style="padding:8px 10px; color:#c07000;" id="liveDrug"></td>
+          <td style="padding:8px 10px;" id="liveSupplement"></td>
+          <td style="padding:8px 10px;">✓ Sent</td>
+          <td style="padding:8px 10px;"><span style="background:#fff3e0; color:#e65100; padding:2px 8px; border-radius:10px; font-size:11px;">Pending</span></td>
+          <td style="padding:8px 10px; text-align:right; color:#aaa;">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div><!-- /dashTab-analytics -->
+
+  <!-- FULFILLMENT QUEUE TAB -->
+  <div id="dashTab-fulfillment" style="display:none; padding:16px 24px;">
+
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div>
+        <div style="font-size:17px; font-weight:bold; color:#1a1a2e;">📦 Morning Fulfillment Queue</div>
+        <div style="font-size:12px; color:#888; margin-top:2px;">Orders purchased overnight · Ready to pack · <span id="fulfillDate"></span></div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div style="font-size:12px; color:#888;">Show: 
+          <select id="fulfillFilter" onchange="filterFulfillment()" style="border:1px solid #ccc; border-radius:3px; padding:3px 6px; font-size:12px; margin-left:4px;">
+            <option value="all">All orders</option>
+            <option value="unpacked">To pack only</option>
+            <option value="packed">Packed only</option>
+          </select>
+        </div>
+        <div id="pendingBadge" style="background:#fff3e0; color:#e65100; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:bold;">30 to pack</div>
+        <button onclick="printFulfillment()" style="background:#2b5fa6; color:#fff; border:none; padding:7px 16px; border-radius:5px; font-size:12px; font-weight:bold; cursor:pointer;">🖨 Print List</button>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:5px; padding:8px 14px; font-size:11px; color:#6d4c00; margin-bottom:14px;">
+      📋 Pick each supplement, place in a labeled bag, leave in the <strong>pickup basket</strong> at the front counter. Check off each row as you pack.
+    </div>
+
+    <!-- Table -->
+    <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-size:12px;" id="fulfillTable">
+        <thead>
+          <tr style="background:#2b5fa6; color:#fff;">
+            <th style="padding:9px 12px; text-align:left; width:30px;">#</th>
+            <th style="padding:9px 12px; text-align:left;">Customer</th>
+            <th style="padding:9px 12px; text-align:left;">Phone</th>
+            <th style="padding:9px 12px; text-align:left;">Ordered</th>
+            <th style="padding:9px 12px; text-align:left;">Rx Drug</th>
+            <th style="padding:9px 12px; text-align:left;">Supplement(s) to Pack</th>
+            <th style="padding:9px 12px; text-align:right;">Total Paid</th>
+            <th style="padding:9px 12px; text-align:center; width:90px;">Packed</th>
+          </tr>
+        </thead>
+        <tbody id="fulfillTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Summary footer -->
+    <div style="display:flex; justify-content:flex-end; margin-top:10px; font-size:13px; color:#333;">
+      <span style="margin-right:24px;">Total orders: <strong id="totalOrdersCount">30</strong></span>
+      <span style="color:#1a7a2a; font-weight:bold;">Total revenue: <strong id="totalRevCount">$0.00</strong></span>
+    </div>
+
+  </div><!-- /dashTab-fulfillment -->
+
+
+</div><!-- /dashboardView -->
+
+<!-- PRINT STYLES -->
+<style>
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+}
+</style>
+
+<!-- HIDDEN PRINT AREA -->
+<div id="printArea" style="display:none;"></div>
+
+<!-- MODALS -->
 <div id="receiptOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center;">
   <div style="background:#fff; border-radius:8px; width:380px; box-shadow:0 8px 32px rgba(0,0,0,0.3); overflow:hidden; font-family:Arial,sans-serif;">
     <!-- Header -->
@@ -1287,6 +1548,11 @@
     document.getElementById('pvjOverlay').style.display = 'none';
     const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
     const patientPhone = document.getElementById('patientPhone').value;
+    const drugName = document.getElementById('itemSelect').value;
+    const supp = getSupplementForDrug(drugName);
+
+    // Add to dashboard live row
+    addLiveJourneyRow(patientName, drugName, supp.name);
 
     // Pulse SMS toggle orange
     const toggle = document.querySelector('.toggle input');
@@ -1316,6 +1582,222 @@
     document.getElementById('pvjOverlay').style.display = 'none';
   }
 
+
+  // ── View switching ──
+  function showView(view, btn) {
+    document.getElementById('rxView').style.display = view === 'rx' ? '' : 'none';
+    document.getElementById('dashboardView').style.display = view === 'dashboard' ? '' : 'none';
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    if (view === 'dashboard') {
+      const now = new Date();
+      document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    }
+  }
+
+  const dashData = {
+    today: { rx: 24, sms: 18, conv: 4, rev: '$47.20' },
+    week:  { rx: 141, sms: 103, conv: 21, rev: '$263.80' },
+    month: { rx: 587, sms: 431, conv: 89, rev: '$1,124.60' },
+  };
+
+  function setDashPeriod(period, btn) {
+    document.querySelectorAll('.dash-period-btn').forEach(b => {
+      b.style.background = '#fff'; b.style.color = '#444'; b.classList.remove('active-period');
+    });
+    btn.style.background = '#2b5fa6'; btn.style.color = '#fff'; btn.classList.add('active-period');
+    const d = dashData[period];
+    document.getElementById('kpiRx').textContent = d.rx;
+    document.getElementById('kpiSms').textContent = d.sms;
+    document.getElementById('kpiConv').textContent = d.conv;
+    document.getElementById('kpiRev').textContent = d.rev;
+  }
+
+  function addLiveJourneyRow(patientName, drugName, supplementName) {
+    const now = new Date();
+    const t = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+    // Prepend to analytics journey table
+    const tbody = document.getElementById('journeyTableBody');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f5f5f5';
+    tr.style.background = '#fffbf0';
+    tr.innerHTML = `
+      <td style="padding:8px 10px; color:#888;">${t}</td>
+      <td style="padding:8px 10px; font-weight:bold;">${patientName}</td>
+      <td style="padding:8px 10px; color:#c07000;">${drugName}</td>
+      <td style="padding:8px 10px;">${supplementName.split('+')[0].trim()}</td>
+      <td style="padding:8px 10px;">✓ Sent</td>
+      <td style="padding:8px 10px;"><span style="background:#fff3e0; color:#e65100; padding:2px 8px; border-radius:10px; font-size:11px;">Pending</span></td>
+      <td style="padding:8px 10px; text-align:right; color:#aaa;">—</td>`;
+    tbody.insertBefore(tr, tbody.firstChild);
+
+    // Prepend to fulfillment queue data so it shows first when tab is opened
+    fulfillOrders.unshift({
+      name: patientName,
+      phone: document.getElementById('patientPhone').value,
+      time: t,
+      rx: drugName,
+      supp: supplementName,
+      total: parseFloat(document.getElementById('billTotal').textContent.replace('$','')) || 0
+    });
+
+    // bump KPIs
+    const smsEl = document.getElementById('kpiSms');
+    smsEl.textContent = parseInt(smsEl.textContent) + 1;
+  }
+
+  function switchDashTab(tab) {
+    ['analytics','fulfillment'].forEach(t => {
+      document.getElementById('dashTab-' + t).style.display = t === tab ? '' : 'none';
+      const dt = document.getElementById('dtab-' + t);
+      dt.style.color = t === tab ? '#2b5fa6' : '#666';
+      dt.style.borderBottom = t === tab ? '3px solid #2b5fa6' : '3px solid transparent';
+      dt.style.fontWeight = t === tab ? 'bold' : 'normal';
+    });
+    if (tab === 'fulfillment') {
+      const now = new Date();
+      document.getElementById('fulfillDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      initFulfillTable();
+    }
+  }
+
+  // ── Fulfillment queue data (30 orders) ──
+  const fulfillOrders = [
+    { name:'Linda Jones',       phone:'(415) 555-0347', time:'11:32 PM', rx:'Atorvastatin 10mg',       supp:'CoQ10 200mg + Vitamin D3 2000IU',              total:38.40 },
+    { name:'Maria Garcia',      phone:'(469) 555-0183', time:'11:48 PM', rx:'Sertraline 50mg',         supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:42.60 },
+    { name:'Patricia Williams', phone:'(503) 555-0265', time:'12:03 AM', rx:'Levothyroxine 50mcg',     supp:'Selenium 200mcg + Vitamin D3 2000IU',           total:31.80 },
+    { name:'Charles Wilson',    phone:'(617) 555-0470', time:'12:17 AM', rx:'Metformin 500mg',         supp:'Vitamin B12 1000mcg + Alpha Lipoic Acid 600mg', total:29.90 },
+    { name:'Joseph Taylor',     phone:'(305) 555-0552', time:'12:44 AM', rx:'Lisinopril 10mg',         supp:'Magnesium Glycinate 400mg',                     total:24.50 },
+    { name:'Robert Johnson',    phone:'(718) 555-0224', time:'1:02 AM',  rx:'Omeprazole 20mg',         supp:'Magnesium 400mg + Vitamin B12 1000mcg',         total:33.10 },
+    { name:'Susan Moore',       phone:'(702) 555-0511', time:'1:19 AM',  rx:'Gabapentin 300mg',        supp:'Magnesium 400mg + Vitamin B6 50mg',             total:27.80 },
+    { name:'Daniel Thompson',   phone:'(615) 555-0798', time:'1:35 AM',  rx:'Amlodipine 5mg',          supp:'Magnesium Glycinate 400mg + CoQ10 100mg',       total:31.20 },
+    { name:'Karen White',       phone:'(901) 555-0675', time:'1:52 AM',  rx:'Escitalopram 10mg',       supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:38.90 },
+    { name:'Nancy Martin',      phone:'(480) 555-0757', time:'2:08 AM',  rx:'Rosuvastatin 10mg',       supp:'CoQ10 200mg + Omega-3 Fish Oil 1000mg',         total:44.20 },
+    { name:'Donald Lewis',      phone:'(702) 555-1044', time:'2:24 AM',  rx:'Warfarin 5mg',            supp:'Vitamin K2 MK-7 100mcg',                        total:22.50 },
+    { name:'Sandra Lee',        phone:'(503) 555-1085', time:'2:41 AM',  rx:'Fluoxetine 20mg',         supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:36.70 },
+    { name:'George Walker',     phone:'(253) 555-1126', time:'2:58 AM',  rx:'Furosemide 40mg',         supp:'Potassium + Magnesium Complex + CoQ10 100mg',   total:41.30 },
+    { name:'Ashley Hall',       phone:'(619) 555-1167', time:'3:14 AM',  rx:'Montelukast 10mg',        supp:'Vitamin D3 2000IU + Omega-3 Fish Oil 1000mg',   total:35.60 },
+    { name:'Kenneth Allen',     phone:'(773) 555-1208', time:'3:31 AM',  rx:'Metoprolol Succ 50mg',    supp:'CoQ10 100mg + Omega-3 Fish Oil 1000mg',         total:33.40 },
+    { name:'Donna Young',       phone:'(602) 555-1249', time:'3:47 AM',  rx:'Duloxetine 30mg',         supp:'Magnesium 400mg + CoQ10 100mg',                 total:37.20 },
+    { name:'Steven Hernandez',  phone:'(214) 555-1290', time:'4:03 AM',  rx:'Losartan 50mg',           supp:'Magnesium 400mg + CoQ10 100mg',                 total:29.60 },
+    { name:'Carol King',        phone:'(212) 555-1331', time:'4:19 AM',  rx:'Amoxicillin 500mg',       supp:'Probiotics 50B CFU',                            total:26.80 },
+    { name:'Edward Wright',     phone:'(404) 555-1372', time:'4:36 AM',  rx:'Pantoprazole 40mg',       supp:'Magnesium 400mg + Calcium Citrate 500mg',       total:34.90 },
+    { name:'Ruth Lopez',        phone:'(469) 555-1413', time:'4:52 AM',  rx:'Alprazolam 0.5mg',        supp:'Magnesium 400mg + L-Theanine 200mg',            total:28.40 },
+    { name:'Brian Hill',        phone:'(617) 555-1454', time:'5:08 AM',  rx:'Carvedilol 6.25mg',       supp:'CoQ10 200mg + Vitamin D3 2000IU',               total:39.10 },
+    { name:'Sharon Scott',      phone:'(310) 555-1495', time:'5:24 AM',  rx:'Venlafaxine XR 75mg',     supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:36.50 },
+    { name:'Kevin Green',       phone:'(305) 555-1536', time:'5:41 AM',  rx:'Trazodone 100mg',         supp:'Magnesium 400mg + L-Theanine 200mg',            total:27.90 },
+    { name:'Amy Adams',         phone:'(713) 555-1577', time:'5:57 AM',  rx:'Prednisone 10mg',         supp:'Calcium Citrate 500mg + Vitamin D3 2000IU',     total:32.60 },
+    { name:'Ronald Baker',      phone:'(816) 555-1618', time:'6:03 AM',  rx:'Bupropion XL 150mg',      supp:'Vitamin D3 2000IU + B-Complex',                 total:35.80 },
+    { name:'Melissa Gonzalez',  phone:'(480) 555-1659', time:'6:14 AM',  rx:'Hydrochlorothiazide 25mg',supp:'Potassium + Magnesium Complex',                 total:23.40 },
+    { name:'Anthony Nelson',    phone:'(206) 555-1700', time:'6:22 AM',  rx:'Clopidogrel 75mg',        supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:37.90 },
+    { name:'Deborah Carter',    phone:'(512) 555-1741', time:'6:35 AM',  rx:'Tamsulosin 0.4mg',        supp:'Saw Palmetto 320mg + Zinc 15mg',                total:31.50 },
+    { name:'Raymond Mitchell',  phone:'(901) 555-1782', time:'6:48 AM',  rx:'Zolpidem 10mg',           supp:'Magnesium 400mg + Melatonin 0.5mg',             total:26.20 },
+    { name:'Stephanie Perez',   phone:'(347) 555-1823', time:'6:59 AM',  rx:'Doxycycline 100mg',       supp:'Probiotics 50B CFU + Vitamin C 500mg',          total:29.70 },
+  ];
+
+  let packedSet = new Set();
+
+  function initFulfillTable() {
+    const tbody = document.getElementById('fulfillTableBody');
+    tbody.innerHTML = '';
+    let total = 0;
+    fulfillOrders.forEach((o, i) => {
+      total += o.total;
+      const packed = packedSet.has(i);
+      const tr = document.createElement('tr');
+      tr.dataset.idx = i;
+      tr.dataset.packed = packed ? '1' : '0';
+      tr.style.borderBottom = '1px solid #f0f0f0';
+      tr.style.background = packed ? '#f8f8f8' : (i % 2 === 0 ? '#fff' : '#fafafa');
+      tr.style.opacity = packed ? '0.5' : '1';
+      tr.innerHTML = `
+        <td style="padding:7px 12px; color:#aaa; font-size:11px;">${i+1}</td>
+        <td style="padding:7px 12px; font-weight:bold; white-space:nowrap;">${o.name}</td>
+        <td style="padding:7px 12px; color:#666; font-size:11px; white-space:nowrap;">${o.phone}</td>
+        <td style="padding:7px 12px; color:#888; font-size:11px; white-space:nowrap;">${o.time}</td>
+        <td style="padding:7px 12px; color:#c07000; font-size:11px; white-space:nowrap;">${o.rx}</td>
+        <td style="padding:7px 12px; font-size:11px; color:#2b5fa6;">${o.supp}</td>
+        <td style="padding:7px 12px; font-weight:bold; color:#1a7a2a; text-align:right; white-space:nowrap;">$${o.total.toFixed(2)}</td>
+        <td style="padding:7px 12px; text-align:center;">
+          <button onclick="markPacked(this, ${i})" style="background:${packed ? '#aaa' : '#1a7a2a'}; color:#fff; border:none; padding:4px 10px; border-radius:3px; font-size:11px; cursor:pointer; white-space:nowrap;" ${packed ? 'disabled' : ''}>
+            ${packed ? '✓ Done' : 'Pack'}
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('totalRevCount').textContent = '$' + total.toFixed(2);
+    updatePendingBadge();
+  }
+
+  function updatePendingBadge() {
+    const remaining = fulfillOrders.length - packedSet.size;
+    const badge = document.getElementById('pendingBadge');
+    badge.textContent = remaining > 0 ? remaining + ' to pack' : '✓ All packed!';
+    badge.style.background = remaining > 0 ? '#fff3e0' : '#e8f5e9';
+    badge.style.color = remaining > 0 ? '#e65100' : '#1a7a2a';
+    document.getElementById('totalOrdersCount').textContent = fulfillOrders.length;
+  }
+
+  function markPacked(btn, idx) {
+    packedSet.add(idx);
+    const tr = btn.closest('tr');
+    tr.style.opacity = '0.5';
+    tr.style.background = '#f8f8f8';
+    tr.dataset.packed = '1';
+    btn.textContent = '✓ Done';
+    btn.style.background = '#aaa';
+    btn.disabled = true;
+    updatePendingBadge();
+  }
+
+  function filterFulfillment() {
+    const val = document.getElementById('fulfillFilter').value;
+    document.querySelectorAll('#fulfillTableBody tr').forEach(tr => {
+      if (val === 'all') tr.style.display = '';
+      else if (val === 'unpacked') tr.style.display = tr.dataset.packed === '1' ? 'none' : '';
+      else if (val === 'packed') tr.style.display = tr.dataset.packed === '0' ? 'none' : '';
+    });
+  }
+
+
+
+  function printFulfillment() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    const totalRev = fulfillOrders.reduce((s, o) => s + o.total, 0);
+    const rows = fulfillOrders.map((o, i) => `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:5px 8px; color:#aaa; font-size:11px;">${i+1}</td>
+        <td style="padding:5px 8px; font-weight:bold; font-size:12px;">${o.name}</td>
+        <td style="padding:5px 8px; font-size:11px; color:#666;">${o.phone}</td>
+        <td style="padding:5px 8px; font-size:11px; color:#888;">${o.time}</td>
+        <td style="padding:5px 8px; font-size:11px; color:#c07000;">${o.rx}</td>
+        <td style="padding:5px 8px; font-size:11px; color:#2b5fa6;">${o.supp}</td>
+        <td style="padding:5px 8px; font-weight:bold; color:#1a7a2a; text-align:right;">$${o.total.toFixed(2)}</td>
+        <td style="padding:5px 8px; text-align:center;"><div style="border:1.5px solid #999; width:14px; height:14px; margin:auto;"></div></td>
+      </tr>`).join('');
+    const html = `<div style="font-family:Arial,sans-serif; padding:14px;">
+      <div style="display:flex; justify-content:space-between; border-bottom:3px solid #2b5fa6; padding-bottom:10px; margin-bottom:12px;">
+        <div><div style="font-size:17px; font-weight:bold; color:#2b5fa6;">PharmRx · Concept Pharmacy</div>
+        <div style="font-size:12px; color:#555;">📦 Morning Fulfillment List · ${dateStr}</div></div>
+        <div style="text-align:right; font-size:12px;">Orders: <strong>${fulfillOrders.length}</strong> &nbsp;|&nbsp; Revenue: <strong style="color:#1a7a2a">$${totalRev.toFixed(2)}</strong></div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead><tr style="background:#2b5fa6; color:#fff;">
+          <th style="padding:6px 8px;">#</th><th style="padding:6px 8px; text-align:left;">Customer</th>
+          <th style="padding:6px 8px; text-align:left;">Phone</th><th style="padding:6px 8px; text-align:left;">Time</th>
+          <th style="padding:6px 8px; text-align:left;">Rx Drug</th><th style="padding:6px 8px; text-align:left;">Supplements to Pack</th>
+          <th style="padding:6px 8px; text-align:right;">Paid</th><th style="padding:6px 8px; text-align:center;">✓</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = html;
+    printArea.style.display = 'block';
+    window.print();
+    setTimeout(() => { printArea.style.display = 'none'; }, 1000);
+  }
 
   function switchTab(el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
