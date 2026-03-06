@@ -414,6 +414,8 @@
       <button class="action-btn">Workflow/Claims <span class="num">[4]</span></button>
       <button class="action-btn">Rx Edit <span class="num">[5]</span></button>
       <button class="action-btn">Fill Audit <span class="num">[6]</span></button>
+      <div style="flex:1;"></div>
+      <button class="action-btn" id="dispenseChargeBtn" onclick="openReceiptModal()" style="background:#1a7a2a; font-size:13px; padding:5px 18px; letter-spacing:0.3px;">💊 Dispense &amp; Charge</button>
     </div>
 
     <!-- CONTENT AREA -->
@@ -570,6 +572,100 @@
     </div><!-- /content-area -->
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- ── RECEIPT MODAL ── -->
+<div id="receiptOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:8px; width:380px; box-shadow:0 8px 32px rgba(0,0,0,0.3); overflow:hidden; font-family:Arial,sans-serif;">
+    <!-- Header -->
+    <div style="background:#2b5fa6; color:#fff; padding:12px 18px; font-size:14px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+      <span>💊 Dispensing Receipt</span>
+      <span id="receiptTimestamp" style="font-size:11px; font-weight:normal; opacity:0.85;"></span>
+    </div>
+    <!-- Body -->
+    <div style="padding:18px 20px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Patient</span>
+        <span id="rcptPatient" style="font-weight:bold;"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Drug</span>
+        <span id="rcptDrug" style="font-weight:bold; color:#c07000; max-width:220px; text-align:right;"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Qty</span>
+        <span id="rcptQty"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Day Supply</span>
+        <span id="rcptDaySupply"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Insurance</span>
+        <span id="rcptIns" style="max-width:220px; text-align:right; font-size:12px;"></span>
+      </div>
+      <hr style="border:none; border-top:1px solid #eee; margin:4px 0;" />
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Base</span><span id="rcptBase"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Fee</span><span id="rcptFee"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:#333;">
+        <span style="color:#888;">Tax</span><span id="rcptTax"></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:bold; color:#1a5a0a; border-top:2px solid #4a9a2a; padding-top:8px; margin-top:2px;">
+        <span>Total</span><span id="rcptTotal"></span>
+      </div>
+      <!-- PAID stamp -->
+      <div style="text-align:center; margin:8px 0 2px;">
+        <span style="display:inline-block; border:3px solid #1a7a2a; color:#1a7a2a; font-size:22px; font-weight:bold; padding:4px 24px; border-radius:6px; letter-spacing:3px; transform:rotate(-3deg); display:inline-block;">✓ PAID</span>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="padding:12px 20px 16px; text-align:center;">
+      <button onclick="confirmPurchase()" style="background:#1a7a2a; color:#fff; border:none; padding:9px 36px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer; width:100%;">Confirm &amp; Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── POST VISIT JOURNEY MODAL ── -->
+<div id="pvjOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1001; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:10px; width:400px; box-shadow:0 8px 40px rgba(0,0,0,0.35); overflow:hidden; font-family:Arial,sans-serif;">
+    <!-- Header -->
+    <div style="background:#ff6b00; color:#fff; padding:14px 20px; font-size:15px; font-weight:bold; display:flex; align-items:center; gap:10px;">
+      <span style="font-size:22px;">📱</span>
+      <span>Post Visit Journey</span>
+    </div>
+    <!-- Body -->
+    <div style="padding:22px 24px 10px; display:flex; flex-direction:column; gap:12px;">
+      <p style="font-size:13px; color:#333; line-height:1.6;">
+        Based on <strong id="pvjPatient"></strong>'s prescription for <strong id="pvjDrug" style="color:#c07000;"></strong>, we've identified a personalized supplement recommendation.
+      </p>
+      <div style="background:#fff8f0; border:1px solid #ffd0a0; border-radius:6px; padding:12px 14px; font-size:13px; color:#333;">
+        <div style="font-size:11px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Recommended Supplement</div>
+        <div id="pvjSupplement" style="font-weight:bold; font-size:14px; color:#c07000;"></div>
+        <div id="pvjSupplementReason" style="font-size:12px; color:#666; margin-top:4px;"></div>
+      </div>
+      <p style="font-size:12px; color:#888; margin-top:2px;">
+        An SMS with the offer will be sent to <strong id="pvjPhone"></strong> in ~3 hours. Include this customer in the journey?
+      </p>
+    </div>
+    <!-- Buttons -->
+    <div style="padding:14px 24px 20px; display:flex; gap:12px;">
+      <button onclick="pvjDecline()" style="flex:1; background:#f0f0f0; color:#444; border:1px solid #ccc; padding:10px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer;">✕ No</button>
+      <button onclick="pvjAccept()" style="flex:2; background:#ff6b00; color:#fff; border:none; padding:10px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer;">📲 Yes, Send SMS</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SMS TOAST ── -->
+<div id="smsToast" style="display:none; position:fixed; bottom:40px; right:30px; background:#1a1a1a; color:#fff; padding:12px 20px; border-radius:8px; font-size:13px; z-index:2000; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:flex; align-items:center; gap:10px; min-width:280px;">
+  <span style="font-size:20px;">📲</span>
+  <div>
+    <div style="font-weight:bold;">SMS Journey Scheduled</div>
+    <div id="toastMsg" style="font-size:12px; color:#aaa; margin-top:2px;"></div>
+  </div>
+</div>
 
 <!-- STATUS BAR -->
 <div class="statusbar">
@@ -1083,7 +1179,142 @@
     document.getElementById('primaryInsurance').textContent = p.ins;
   }
 
-  function switchTab(el) {
+
+  // ── Supplement recommendations map (drug → supplement + reason) ──
+  const supplementMap = {
+    "Escitalopram": { name: "Omega-3 Fish Oil 1000mg + Magnesium Glycinate 400mg", reason: "Supports mood regulation and may enhance antidepressant efficacy" },
+    "Sertraline":   { name: "Omega-3 Fish Oil 1000mg + Magnesium Glycinate 400mg", reason: "Supports mood regulation and may enhance antidepressant efficacy" },
+    "Fluoxetine":   { name: "Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU", reason: "Supports serotonin pathways and overall mental wellbeing" },
+    "Bupropion":    { name: "Vitamin D3 2000IU + B-Complex", reason: "Supports dopamine production and energy metabolism" },
+    "Venlafaxine":  { name: "Omega-3 Fish Oil 1000mg + Magnesium Glycinate 400mg", reason: "Supports mood and reduces anxiety" },
+    "Duloxetine":   { name: "Magnesium Glycinate 400mg + CoQ10 100mg", reason: "Supports nerve function and reduces fatigue" },
+    "Trazodone":    { name: "Magnesium Glycinate 400mg + L-Theanine 200mg", reason: "Promotes relaxation and improves sleep quality" },
+    "Atorvastatin": { name: "CoQ10 200mg + Vitamin D3 2000IU", reason: "Statins deplete CoQ10; supplementation supports heart and muscle health" },
+    "Simvastatin":  { name: "CoQ10 200mg + Vitamin D3 2000IU", reason: "Statins deplete CoQ10; supplementation supports heart and muscle health" },
+    "Rosuvastatin": { name: "CoQ10 200mg + Omega-3 Fish Oil 1000mg", reason: "Supports cardiovascular health alongside statin therapy" },
+    "Lisinopril":   { name: "Magnesium Glycinate 400mg + Potassium-rich diet support", reason: "Supports blood pressure management and heart function" },
+    "Losartan":     { name: "Magnesium Glycinate 400mg + CoQ10 100mg", reason: "Supports cardiovascular health and blood pressure regulation" },
+    "Amlodipine":   { name: "Magnesium Glycinate 400mg + CoQ10 100mg", reason: "Supports vascular tone and heart muscle function" },
+    "Metoprolol":   { name: "CoQ10 100mg + Omega-3 Fish Oil 1000mg", reason: "Beta blockers may reduce CoQ10; supports heart energy" },
+    "Carvedilol":   { name: "CoQ10 200mg + Vitamin D3 2000IU", reason: "Supports cardiac energy and overall cardiovascular function" },
+    "Metformin":    { name: "Vitamin B12 1000mcg + Alpha Lipoic Acid 600mg", reason: "Metformin depletes B12; ALA supports insulin sensitivity" },
+    "Levothyroxine":{ name: "Selenium 200mcg + Vitamin D3 2000IU", reason: "Supports thyroid hormone conversion and immune function" },
+    "Omeprazole":   { name: "Magnesium Glycinate 400mg + Vitamin B12 1000mcg", reason: "PPIs reduce magnesium and B12 absorption long-term" },
+    "Pantoprazole": { name: "Magnesium Glycinate 400mg + Calcium Citrate 500mg", reason: "PPIs reduce mineral absorption; citrate form is better absorbed" },
+    "Gabapentin":   { name: "Magnesium Glycinate 400mg + Vitamin B6 50mg", reason: "Supports nerve function and may reduce neuropathic discomfort" },
+    "Tramadol":     { name: "Magnesium Glycinate 400mg + Turmeric Curcumin 500mg", reason: "Supports pain management and reduces inflammation" },
+    "Furosemide":   { name: "Potassium + Magnesium Complex + CoQ10 100mg", reason: "Loop diuretics deplete electrolytes; replenishment is essential" },
+    "Hydrochlorothiazide": { name: "Potassium + Magnesium Complex", reason: "Thiazide diuretics deplete potassium and magnesium" },
+    "Warfarin":     { name: "Vitamin K2 MK-7 100mcg (stable dose)", reason: "Consistent K2 intake supports bone health without affecting INR" },
+    "Clopidogrel":  { name: "Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU", reason: "Supports cardiovascular health alongside antiplatelet therapy" },
+    "Aspirin":      { name: "Omega-3 Fish Oil 1000mg + Vitamin C 500mg", reason: "Supports anti-inflammatory effects and gastric mucosal protection" },
+    "Albuterol":    { name: "Magnesium Glycinate 400mg + Vitamin D3 2000IU", reason: "Supports bronchodilation and immune function in asthma" },
+    "Fluticasone":  { name: "Vitamin D3 2000IU + Probiotics 10B CFU", reason: "Supports immune function and respiratory health" },
+    "Montelukast":  { name: "Vitamin D3 2000IU + Omega-3 Fish Oil 1000mg", reason: "Supports immune regulation and reduces airway inflammation" },
+    "Alprazolam":   { name: "Magnesium Glycinate 400mg + L-Theanine 200mg", reason: "Supports GABA pathways and promotes calm without sedation" },
+    "Clonazepam":   { name: "Magnesium Glycinate 400mg + B-Complex", reason: "Supports nervous system function and stress resilience" },
+    "Zolpidem":     { name: "Magnesium Glycinate 400mg + Melatonin 0.5mg", reason: "Supports natural sleep architecture and relaxation" },
+    "Amoxicillin":  { name: "Probiotics 50B CFU (Lactobacillus blend)", reason: "Restores gut flora disrupted by antibiotic therapy" },
+    "Azithromycin": { name: "Probiotics 50B CFU + Zinc 15mg", reason: "Supports immune recovery and gut health post-antibiotic" },
+    "Doxycycline":  { name: "Probiotics 50B CFU + Vitamin C 500mg", reason: "Restores gut flora and supports immune recovery" },
+    "Prednisone":   { name: "Calcium Citrate 500mg + Vitamin D3 2000IU + Probiotics 30B CFU", reason: "Steroids deplete calcium and disrupt gut flora" },
+    "Methylprednisolone": { name: "Calcium Citrate 500mg + Vitamin D3 2000IU", reason: "Corticosteroids increase calcium loss; supplementation protects bone density" },
+    "Ibuprofen":    { name: "Omega-3 Fish Oil 1000mg + Turmeric Curcumin 500mg", reason: "Supports anti-inflammatory effects and gastric mucosal protection" },
+    "Naproxen":     { name: "Omega-3 Fish Oil 1000mg + Turmeric Curcumin 500mg", reason: "Supports anti-inflammatory effects and gut lining protection" },
+    "Tamsulosin":   { name: "Saw Palmetto 320mg + Zinc 15mg", reason: "Supports prostate health and urinary tract function" },
+    "Cyclobenzaprine": { name: "Magnesium Glycinate 400mg + Turmeric Curcumin 500mg", reason: "Supports muscle relaxation and reduces inflammation" },
+  };
+
+  function getSupplementForDrug(drugName) {
+    for (const key of Object.keys(supplementMap)) {
+      if (drugName.startsWith(key)) return supplementMap[key];
+    }
+    return { name: "Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU", reason: "General cardiovascular and immune support" };
+  }
+
+  function openReceiptModal() {
+    const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
+    const drugName = document.getElementById('itemSelect').value;
+    const qty = document.getElementById('drugQty').textContent;
+    const daySupply = document.getElementById('daySupplyInput').value;
+    const ins = document.getElementById('primaryInsurance').textContent;
+    const base = document.getElementById('billBase').textContent;
+    const fee = document.getElementById('billFee').textContent;
+    const tax = document.getElementById('billTax').textContent;
+    const total = document.getElementById('billTotal').textContent;
+
+    const now = new Date();
+    const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + '  ' +
+               (now.getMonth()+1).toString().padStart(2,'0') + '/' +
+               now.getDate().toString().padStart(2,'0') + '/' + now.getFullYear();
+
+    document.getElementById('receiptTimestamp').textContent = ts;
+    document.getElementById('rcptPatient').textContent = patientName;
+    document.getElementById('rcptDrug').textContent = drugName;
+    document.getElementById('rcptQty').textContent = qty;
+    document.getElementById('rcptDaySupply').textContent = daySupply + ' days';
+    document.getElementById('rcptIns').textContent = ins;
+    document.getElementById('rcptBase').textContent = base;
+    document.getElementById('rcptFee').textContent = fee;
+    document.getElementById('rcptTax').textContent = tax;
+    document.getElementById('rcptTotal').textContent = total;
+
+    const overlay = document.getElementById('receiptOverlay');
+    overlay.style.display = 'flex';
+  }
+
+  function confirmPurchase() {
+    document.getElementById('receiptOverlay').style.display = 'none';
+
+    const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
+    const patientPhone = document.getElementById('patientPhone').value;
+    const drugName = document.getElementById('itemSelect').value;
+    const supp = getSupplementForDrug(drugName);
+
+    document.getElementById('pvjPatient').textContent = patientName;
+    document.getElementById('pvjDrug').textContent = drugName;
+    document.getElementById('pvjPhone').textContent = patientPhone;
+    document.getElementById('pvjSupplement').textContent = supp.name;
+    document.getElementById('pvjSupplementReason').textContent = supp.reason;
+
+    const pvj = document.getElementById('pvjOverlay');
+    pvj.style.display = 'flex';
+  }
+
+  function pvjAccept() {
+    document.getElementById('pvjOverlay').style.display = 'none';
+    const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
+    const patientPhone = document.getElementById('patientPhone').value;
+
+    // Pulse SMS toggle orange
+    const toggle = document.querySelector('.toggle input');
+    toggle.checked = true;
+    const slider = document.querySelector('.slider');
+    slider.style.transition = 'background 0.2s';
+    let pulses = 0;
+    const pulse = setInterval(() => {
+      slider.style.background = pulses % 2 === 0 ? '#ffaa00' : '#ff6b00';
+      pulses++;
+      if (pulses > 5) { clearInterval(pulse); slider.style.background = '#ff6b00'; }
+    }, 200);
+
+    // Show toast
+    const toast = document.getElementById('smsToast');
+    document.getElementById('toastMsg').textContent = 'Sending to ' + patientPhone + ' in ~3 hours';
+    toast.style.display = 'flex';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.8s';
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 800);
+    }, 4000);
+  }
+
+  function pvjDecline() {
+    document.getElementById('pvjOverlay').style.display = 'none';
+  }
+
+
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
   }
