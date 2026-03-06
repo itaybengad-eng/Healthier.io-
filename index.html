@@ -471,9 +471,9 @@
           <div class="form-body">
             <div class="form-row">
               <label>Written:</label>
-              <input type="text" value="12/28/2023" style="max-width:120px;" />
+              <input type="text" id="writtenDate" style="max-width:120px;" />
               <span style="margin-left:6px; color:#444;">Expire:</span>
-              <input type="text" placeholder="MM/DD/YYYY" style="flex:1;" />
+              <input type="text" id="expireDate" style="flex:1;" />
             </div>
             <div class="form-row">
               <label>Type:</label>
@@ -527,7 +527,7 @@
             </div>
             <div class="drug-field">
               <div class="field-label">BOH / EOH</div>
-              <div class="field-value">0 / -225</div>
+              <div class="field-value" id="drugBohEoh">—</div>
             </div>
             <div class="drug-field">
               <div class="field-label">Quantity</div>
@@ -845,7 +845,68 @@
     "Methylprednisolone 4 mg":   { qty: 21,  daySupply: 6,  shelfMonths: 24 },
   };
 
-  // Populate item select from drugPrices keys
+  // BOH (Beginning on Hand) / EOH (End on Hand) - realistic pharmacy stock levels per drug
+  const drugBOH = {
+    "Escitalopram 10 mg": [240, 210], "Escitalopram 5 mg": [120, 90], "Escitalopram 20 mg": [180, 150],
+    "Atorvastatin 10 mg": [300, 270], "Atorvastatin 20 mg": [270, 240], "Atorvastatin 40 mg": [300, 270], "Atorvastatin 80 mg": [150, 120],
+    "Lisinopril 5 mg": [210, 180], "Lisinopril 10 mg": [330, 300], "Lisinopril 20 mg": [270, 240], "Lisinopril 40 mg": [150, 120],
+    "Levothyroxine 25 mcg": [120, 90], "Levothyroxine 50 mcg": [210, 180], "Levothyroxine 75 mcg": [180, 150], "Levothyroxine 100 mcg": [240, 210],
+    "Metformin 500 mg": [360, 300], "Metformin 850 mg": [240, 180], "Metformin 1000 mg": [300, 240],
+    "Amlodipine 2.5 mg": [150, 120], "Amlodipine 5 mg": [330, 300], "Amlodipine 10 mg": [210, 180],
+    "Metoprolol Succinate 25 mg": [180, 150], "Metoprolol Succinate 50 mg": [240, 210], "Metoprolol Succinate 100 mg": [180, 150],
+    "Metoprolol Tartrate 25 mg": [120, 60], "Metoprolol Tartrate 50 mg": [180, 120],
+    "Omeprazole 10 mg": [200, 170], "Omeprazole 20 mg": [300, 270], "Omeprazole 40 mg": [210, 180],
+    "Simvastatin 10 mg": [150, 120], "Simvastatin 20 mg": [180, 150], "Simvastatin 40 mg": [210, 180],
+    "Losartan 25 mg": [120, 90], "Losartan 50 mg": [240, 210], "Losartan 100 mg": [180, 150],
+    "Albuterol HFA 90 mcg Inhaler": [12, 10], "Fluticasone Nasal 50 mcg Spray": [8, 6],
+    "Gabapentin 100 mg": [270, 180], "Gabapentin 300 mg": [360, 270], "Gabapentin 400 mg": [270, 180], "Gabapentin 600 mg": [180, 90],
+    "Hydrochlorothiazide 12.5 mg": [180, 150], "Hydrochlorothiazide 25 mg": [210, 180],
+    "Sertraline 25 mg": [120, 90], "Sertraline 50 mg": [270, 240], "Sertraline 100 mg": [210, 180],
+    "Montelukast 4 mg": [90, 60], "Montelukast 5 mg": [120, 90], "Montelukast 10 mg": [210, 180],
+    "Pantoprazole 20 mg": [150, 120], "Pantoprazole 40 mg": [240, 210],
+    "Bupropion HCl 75 mg": [90, 60], "Bupropion HCl 100 mg": [120, 90], "Bupropion XL 150 mg": [180, 150], "Bupropion XL 300 mg": [150, 120],
+    "Furosemide 20 mg": [120, 90], "Furosemide 40 mg": [180, 150], "Furosemide 80 mg": [90, 60],
+    "Tramadol 50 mg": [90, 60], "Tramadol 100 mg": [60, 30],
+    "Trazodone 50 mg": [120, 90], "Trazodone 100 mg": [90, 60], "Trazodone 150 mg": [60, 30],
+    "Cyclobenzaprine 5 mg": [90, 60], "Cyclobenzaprine 10 mg": [120, 90],
+    "Alprazolam 0.25 mg": [60, 30], "Alprazolam 0.5 mg": [90, 60], "Alprazolam 1 mg": [60, 30],
+    "Clonazepam 0.5 mg": [60, 30], "Clonazepam 1 mg": [90, 60], "Clonazepam 2 mg": [60, 30],
+    "Amoxicillin 250 mg": [63, 33], "Amoxicillin 500 mg": [63, 42], "Amoxicillin 875 mg": [40, 20],
+    "Azithromycin 250 mg": [36, 30], "Azithromycin 500 mg": [18, 15],
+    "Doxycycline Hyclate 50 mg": [90, 60], "Doxycycline Hyclate 100 mg": [56, 42],
+    "Prednisone 5 mg": [63, 42], "Prednisone 10 mg": [63, 42], "Prednisone 20 mg": [40, 30],
+    "Methylprednisolone 4 mg": [63, 42],
+    "Ibuprofen 200 mg": [300, 200], "Ibuprofen 400 mg": [90, 60], "Ibuprofen 600 mg": [90, 60], "Ibuprofen 800 mg": [90, 60],
+    "Naproxen 220 mg": [200, 100], "Naproxen 250 mg": [90, 75], "Naproxen 500 mg": [90, 60],
+    "Rosuvastatin 5 mg": [120, 90], "Rosuvastatin 10 mg": [180, 150], "Rosuvastatin 20 mg": [150, 120], "Rosuvastatin 40 mg": [120, 90],
+    "Clopidogrel 75 mg": [150, 120],
+    "Aspirin 81 mg": [270, 180], "Aspirin 325 mg": [300, 200],
+    "Tamsulosin 0.4 mg": [120, 90],
+    "Carvedilol 3.125 mg": [120, 60], "Carvedilol 6.25 mg": [120, 60], "Carvedilol 12.5 mg": [120, 60], "Carvedilol 25 mg": [120, 60],
+    "Venlafaxine XR 37.5 mg": [90, 60], "Venlafaxine XR 75 mg": [120, 90], "Venlafaxine XR 150 mg": [90, 60],
+    "Duloxetine 20 mg": [90, 60], "Duloxetine 30 mg": [120, 90], "Duloxetine 60 mg": [90, 60],
+    "Fluoxetine 10 mg": [120, 90], "Fluoxetine 20 mg": [180, 150], "Fluoxetine 40 mg": [120, 90],
+    "Zolpidem 5 mg": [60, 30], "Zolpidem 10 mg": [60, 30],
+    "Warfarin 1 mg": [90, 60], "Warfarin 2 mg": [90, 60], "Warfarin 2.5 mg": [90, 60], "Warfarin 5 mg": [120, 90], "Warfarin 10 mg": [60, 30],
+    "Lisinopril/HCTZ 10/12.5 mg": [150, 120], "Lisinopril/HCTZ 20/12.5 mg": [120, 90],
+  };
+
+  // Set today's date for Written and Expire (1 year from today)
+  function todayMMDDYYYY() {
+    const d = new Date();
+    return (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getDate().toString().padStart(2,'0') + '/' + d.getFullYear();
+  }
+  function expireDateFromToday() {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getDate().toString().padStart(2,'0') + '/' + d.getFullYear();
+  }
+  document.getElementById('writtenDate').value = todayMMDDYYYY();
+  document.getElementById('expireDate').value = expireDateFromToday();
+
+
   const itemSel = document.getElementById('itemSelect');
   Object.keys(drugPrices).forEach(name => {
     const opt = document.createElement('option');
@@ -883,6 +944,8 @@
     document.getElementById('drugQty').textContent = qty;
     document.getElementById('daySupplyInput').value = meta.daySupply;
     document.getElementById('doNotUseAfter').textContent = calcExpiryDate(meta.shelfMonths);
+    const boh = drugBOH[name] || [150, 120];
+    document.getElementById('drugBohEoh').textContent = boh[0] + ' / ' + boh[1];
     document.getElementById('billBase').textContent = '$' + base.toFixed(2);
     document.getElementById('billFee').textContent = '$' + FEE.toFixed(2);
     document.getElementById('billSubtotal').textContent = '$' + subtotal.toFixed(2);
