@@ -588,12 +588,12 @@
 
   <!-- Dashboard Tab Bar -->
   <div style="background:#fff; border-bottom:2px solid #ddd; display:flex; align-items:center; padding:0 24px; gap:0;">
-    <div onclick="switchDashTab('analytics')" id="dtab-analytics" style="padding:12px 20px; cursor:pointer; font-size:13px; font-weight:bold; color:#2b5fa6; border-bottom:3px solid #2b5fa6; margin-bottom:-2px;">📊 Analytics</div>
-    <div onclick="switchDashTab('fulfillment')" id="dtab-fulfillment" style="padding:12px 20px; cursor:pointer; font-size:13px; color:#666; border-bottom:3px solid transparent; margin-bottom:-2px;">📦 Morning Fulfillment Queue</div>
+    <div onclick="switchDashTab('fulfillment')" id="dtab-fulfillment" style="padding:12px 20px; cursor:pointer; font-size:13px; font-weight:bold; color:#2b5fa6; border-bottom:3px solid #2b5fa6; margin-bottom:-2px;">📦 Morning Fulfillment Queue</div>
+    <div onclick="switchDashTab('analytics')" id="dtab-analytics" style="padding:12px 20px; cursor:pointer; font-size:13px; color:#666; border-bottom:3px solid transparent; margin-bottom:-2px;">📊 Analytics</div>
   </div>
 
   <!-- ANALYTICS TAB -->
-  <div id="dashTab-analytics" style="padding:20px 24px;">
+  <div id="dashTab-analytics" style="display:none; padding:20px 24px;">
 
   <!-- Header -->
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -772,7 +772,16 @@
   </div><!-- /dashTab-analytics -->
 
   <!-- FULFILLMENT QUEUE TAB -->
-  <div id="dashTab-fulfillment" style="display:none; padding:16px 24px;">
+  <div id="dashTab-fulfillment" style="padding:16px 24px;">
+
+    <!-- Revenue Hero Banner -->
+    <div style="background:linear-gradient(135deg, #1a5a0a 0%, #2a8a1a 50%, #1a7a2a 100%); border-radius:10px; padding:20px 28px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,0.15);">
+      <div>
+        <div style="color:rgba(255,255,255,0.8); font-size:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">💰 While you were sleeping...</div>
+        <div style="color:#fff; font-size:36px; font-weight:bold; letter-spacing:-1px;" id="heroRevenue">$1,013.30</div>
+        <div style="color:rgba(255,255,255,0.75); font-size:13px; margin-top:4px;"><strong style="color:#fff;">30 customers</strong> purchased supplements · 8:07 PM – 1:43 AM · zero effort · zero staff</div>
+      </div>
+    </div>
 
     <!-- Header -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -1591,10 +1600,7 @@
     document.getElementById('dashboardView').style.display = view === 'dashboard' ? '' : 'none';
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    if (view === 'dashboard') {
-      const now = new Date();
-      document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-    }
+    if (view === 'dashboard') switchDashTab('fulfillment');
   }
 
   const dashData = {
@@ -1660,42 +1666,49 @@
     if (tab === 'fulfillment') {
       const now = new Date();
       document.getElementById('fulfillDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      const totalRev = fulfillOrders.reduce((s, o) => s + o.total, 0);
+      document.getElementById('heroRevenue').textContent = '$' + totalRev.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      document.getElementById('heroShare').textContent = '$' + (totalRev * 0.20).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       initFulfillTable();
+    }
+    if (tab === 'analytics') {
+      const now = new Date();
+      document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
     }
   }
 
   // ── Fulfillment queue data (30 orders) ──
   const fulfillOrders = [
-    { name:'Linda Jones',       phone:'(415) 555-0347', time:'11:32 PM', rx:'Atorvastatin 10mg',       supp:'CoQ10 200mg + Vitamin D3 2000IU',              total:38.40 },
-    { name:'Maria Garcia',      phone:'(469) 555-0183', time:'11:48 PM', rx:'Sertraline 50mg',         supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:42.60 },
-    { name:'Patricia Williams', phone:'(503) 555-0265', time:'12:03 AM', rx:'Levothyroxine 50mcg',     supp:'Selenium 200mcg + Vitamin D3 2000IU',           total:31.80 },
-    { name:'Charles Wilson',    phone:'(617) 555-0470', time:'12:17 AM', rx:'Metformin 500mg',         supp:'Vitamin B12 1000mcg + Alpha Lipoic Acid 600mg', total:29.90 },
-    { name:'Joseph Taylor',     phone:'(305) 555-0552', time:'12:44 AM', rx:'Lisinopril 10mg',         supp:'Magnesium Glycinate 400mg',                     total:24.50 },
-    { name:'Robert Johnson',    phone:'(718) 555-0224', time:'1:02 AM',  rx:'Omeprazole 20mg',         supp:'Magnesium 400mg + Vitamin B12 1000mcg',         total:33.10 },
-    { name:'Susan Moore',       phone:'(702) 555-0511', time:'1:19 AM',  rx:'Gabapentin 300mg',        supp:'Magnesium 400mg + Vitamin B6 50mg',             total:27.80 },
-    { name:'Daniel Thompson',   phone:'(615) 555-0798', time:'1:35 AM',  rx:'Amlodipine 5mg',          supp:'Magnesium Glycinate 400mg + CoQ10 100mg',       total:31.20 },
-    { name:'Karen White',       phone:'(901) 555-0675', time:'1:52 AM',  rx:'Escitalopram 10mg',       supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:38.90 },
-    { name:'Nancy Martin',      phone:'(480) 555-0757', time:'2:08 AM',  rx:'Rosuvastatin 10mg',       supp:'CoQ10 200mg + Omega-3 Fish Oil 1000mg',         total:44.20 },
-    { name:'Donald Lewis',      phone:'(702) 555-1044', time:'2:24 AM',  rx:'Warfarin 5mg',            supp:'Vitamin K2 MK-7 100mcg',                        total:22.50 },
-    { name:'Sandra Lee',        phone:'(503) 555-1085', time:'2:41 AM',  rx:'Fluoxetine 20mg',         supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:36.70 },
-    { name:'George Walker',     phone:'(253) 555-1126', time:'2:58 AM',  rx:'Furosemide 40mg',         supp:'Potassium + Magnesium Complex + CoQ10 100mg',   total:41.30 },
-    { name:'Ashley Hall',       phone:'(619) 555-1167', time:'3:14 AM',  rx:'Montelukast 10mg',        supp:'Vitamin D3 2000IU + Omega-3 Fish Oil 1000mg',   total:35.60 },
-    { name:'Kenneth Allen',     phone:'(773) 555-1208', time:'3:31 AM',  rx:'Metoprolol Succ 50mg',    supp:'CoQ10 100mg + Omega-3 Fish Oil 1000mg',         total:33.40 },
-    { name:'Donna Young',       phone:'(602) 555-1249', time:'3:47 AM',  rx:'Duloxetine 30mg',         supp:'Magnesium 400mg + CoQ10 100mg',                 total:37.20 },
-    { name:'Steven Hernandez',  phone:'(214) 555-1290', time:'4:03 AM',  rx:'Losartan 50mg',           supp:'Magnesium 400mg + CoQ10 100mg',                 total:29.60 },
-    { name:'Carol King',        phone:'(212) 555-1331', time:'4:19 AM',  rx:'Amoxicillin 500mg',       supp:'Probiotics 50B CFU',                            total:26.80 },
-    { name:'Edward Wright',     phone:'(404) 555-1372', time:'4:36 AM',  rx:'Pantoprazole 40mg',       supp:'Magnesium 400mg + Calcium Citrate 500mg',       total:34.90 },
-    { name:'Ruth Lopez',        phone:'(469) 555-1413', time:'4:52 AM',  rx:'Alprazolam 0.5mg',        supp:'Magnesium 400mg + L-Theanine 200mg',            total:28.40 },
-    { name:'Brian Hill',        phone:'(617) 555-1454', time:'5:08 AM',  rx:'Carvedilol 6.25mg',       supp:'CoQ10 200mg + Vitamin D3 2000IU',               total:39.10 },
-    { name:'Sharon Scott',      phone:'(310) 555-1495', time:'5:24 AM',  rx:'Venlafaxine XR 75mg',     supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:36.50 },
-    { name:'Kevin Green',       phone:'(305) 555-1536', time:'5:41 AM',  rx:'Trazodone 100mg',         supp:'Magnesium 400mg + L-Theanine 200mg',            total:27.90 },
-    { name:'Amy Adams',         phone:'(713) 555-1577', time:'5:57 AM',  rx:'Prednisone 10mg',         supp:'Calcium Citrate 500mg + Vitamin D3 2000IU',     total:32.60 },
-    { name:'Ronald Baker',      phone:'(816) 555-1618', time:'6:03 AM',  rx:'Bupropion XL 150mg',      supp:'Vitamin D3 2000IU + B-Complex',                 total:35.80 },
-    { name:'Melissa Gonzalez',  phone:'(480) 555-1659', time:'6:14 AM',  rx:'Hydrochlorothiazide 25mg',supp:'Potassium + Magnesium Complex',                 total:23.40 },
-    { name:'Anthony Nelson',    phone:'(206) 555-1700', time:'6:22 AM',  rx:'Clopidogrel 75mg',        supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:37.90 },
-    { name:'Deborah Carter',    phone:'(512) 555-1741', time:'6:35 AM',  rx:'Tamsulosin 0.4mg',        supp:'Saw Palmetto 320mg + Zinc 15mg',                total:31.50 },
-    { name:'Raymond Mitchell',  phone:'(901) 555-1782', time:'6:48 AM',  rx:'Zolpidem 10mg',           supp:'Magnesium 400mg + Melatonin 0.5mg',             total:26.20 },
-    { name:'Stephanie Perez',   phone:'(347) 555-1823', time:'6:59 AM',  rx:'Doxycycline 100mg',       supp:'Probiotics 50B CFU + Vitamin C 500mg',          total:29.70 },
+    { name:'Linda Jones',       phone:'(415) 555-0347', time:'8:07 PM',  rx:'Atorvastatin 10mg',        supp:'CoQ10 200mg + Vitamin D3 2000IU',              total:38.40 },
+    { name:'Maria Garcia',      phone:'(469) 555-0183', time:'8:19 PM',  rx:'Sertraline 50mg',          supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:42.60 },
+    { name:'Patricia Williams', phone:'(503) 555-0265', time:'8:34 PM',  rx:'Levothyroxine 50mcg',      supp:'Selenium 200mcg + Vitamin D3 2000IU',           total:31.80 },
+    { name:'Charles Wilson',    phone:'(617) 555-0470', time:'8:48 PM',  rx:'Metformin 500mg',          supp:'Vitamin B12 1000mcg + Alpha Lipoic Acid 600mg', total:29.90 },
+    { name:'Joseph Taylor',     phone:'(305) 555-0552', time:'9:02 PM',  rx:'Lisinopril 10mg',          supp:'Magnesium Glycinate 400mg',                     total:24.50 },
+    { name:'Robert Johnson',    phone:'(718) 555-0224', time:'9:15 PM',  rx:'Omeprazole 20mg',          supp:'Magnesium 400mg + Vitamin B12 1000mcg',         total:33.10 },
+    { name:'Susan Moore',       phone:'(702) 555-0511', time:'9:28 PM',  rx:'Gabapentin 300mg',         supp:'Magnesium 400mg + Vitamin B6 50mg',             total:27.80 },
+    { name:'Daniel Thompson',   phone:'(615) 555-0798', time:'9:41 PM',  rx:'Amlodipine 5mg',           supp:'Magnesium Glycinate 400mg + CoQ10 100mg',       total:31.20 },
+    { name:'Karen White',       phone:'(901) 555-0675', time:'9:53 PM',  rx:'Escitalopram 10mg',        supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:38.90 },
+    { name:'Nancy Martin',      phone:'(480) 555-0757', time:'10:06 PM', rx:'Rosuvastatin 10mg',        supp:'CoQ10 200mg + Omega-3 Fish Oil 1000mg',         total:44.20 },
+    { name:'Donald Lewis',      phone:'(702) 555-1044', time:'10:19 PM', rx:'Warfarin 5mg',             supp:'Vitamin K2 MK-7 100mcg',                        total:22.50 },
+    { name:'Sandra Lee',        phone:'(503) 555-1085', time:'10:31 PM', rx:'Fluoxetine 20mg',          supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:36.70 },
+    { name:'George Walker',     phone:'(253) 555-1126', time:'10:44 PM', rx:'Furosemide 40mg',          supp:'Potassium + Magnesium Complex + CoQ10 100mg',   total:41.30 },
+    { name:'Ashley Hall',       phone:'(619) 555-1167', time:'10:57 PM', rx:'Montelukast 10mg',         supp:'Vitamin D3 2000IU + Omega-3 Fish Oil 1000mg',   total:35.60 },
+    { name:'Kenneth Allen',     phone:'(773) 555-1208', time:'11:09 PM', rx:'Metoprolol Succ 50mg',     supp:'CoQ10 100mg + Omega-3 Fish Oil 1000mg',         total:33.40 },
+    { name:'Donna Young',       phone:'(602) 555-1249', time:'11:22 PM', rx:'Duloxetine 30mg',          supp:'Magnesium 400mg + CoQ10 100mg',                 total:37.20 },
+    { name:'Steven Hernandez',  phone:'(214) 555-1290', time:'11:34 PM', rx:'Losartan 50mg',            supp:'Magnesium 400mg + CoQ10 100mg',                 total:29.60 },
+    { name:'Carol King',        phone:'(212) 555-1331', time:'11:47 PM', rx:'Amoxicillin 500mg',        supp:'Probiotics 50B CFU',                            total:26.80 },
+    { name:'Edward Wright',     phone:'(404) 555-1372', time:'11:58 PM', rx:'Pantoprazole 40mg',        supp:'Magnesium 400mg + Calcium Citrate 500mg',       total:34.90 },
+    { name:'Ruth Lopez',        phone:'(469) 555-1413', time:'12:11 AM', rx:'Alprazolam 0.5mg',         supp:'Magnesium 400mg + L-Theanine 200mg',            total:28.40 },
+    { name:'Brian Hill',        phone:'(617) 555-1454', time:'12:22 AM', rx:'Carvedilol 6.25mg',        supp:'CoQ10 200mg + Vitamin D3 2000IU',               total:39.10 },
+    { name:'Sharon Scott',      phone:'(310) 555-1495', time:'12:34 AM', rx:'Venlafaxine XR 75mg',      supp:'Omega-3 Fish Oil 1000mg + Magnesium 400mg',     total:36.50 },
+    { name:'Kevin Green',       phone:'(305) 555-1536', time:'12:44 AM', rx:'Trazodone 100mg',          supp:'Magnesium 400mg + L-Theanine 200mg',            total:27.90 },
+    { name:'Amy Adams',         phone:'(713) 555-1577', time:'12:53 AM', rx:'Prednisone 10mg',          supp:'Calcium Citrate 500mg + Vitamin D3 2000IU',     total:32.60 },
+    { name:'Ronald Baker',      phone:'(816) 555-1618', time:'1:04 AM',  rx:'Bupropion XL 150mg',       supp:'Vitamin D3 2000IU + B-Complex',                 total:35.80 },
+    { name:'Melissa Gonzalez',  phone:'(480) 555-1659', time:'1:14 AM',  rx:'Hydrochlorothiazide 25mg', supp:'Potassium + Magnesium Complex',                 total:23.40 },
+    { name:'Anthony Nelson',    phone:'(206) 555-1700', time:'1:22 AM',  rx:'Clopidogrel 75mg',         supp:'Omega-3 Fish Oil 1000mg + Vitamin D3 2000IU',   total:37.90 },
+    { name:'Deborah Carter',    phone:'(512) 555-1741', time:'1:29 AM',  rx:'Tamsulosin 0.4mg',         supp:'Saw Palmetto 320mg + Zinc 15mg',                total:31.50 },
+    { name:'Raymond Mitchell',  phone:'(901) 555-1782', time:'1:37 AM',  rx:'Zolpidem 10mg',            supp:'Magnesium 400mg + Melatonin 0.5mg',             total:26.20 },
+    { name:'Stephanie Perez',   phone:'(347) 555-1823', time:'1:43 AM',  rx:'Doxycycline 100mg',        supp:'Probiotics 50B CFU + Vitamin C 500mg',          total:29.70 },
   ];
 
   let packedSet = new Set();
@@ -1711,8 +1724,8 @@
       tr.dataset.idx = i;
       tr.dataset.packed = packed ? '1' : '0';
       tr.style.borderBottom = '1px solid #f0f0f0';
-      tr.style.background = packed ? '#f8f8f8' : (i % 2 === 0 ? '#fff' : '#fafafa');
-      tr.style.opacity = packed ? '0.5' : '1';
+      tr.style.background = packed ? '#f0f7f0' : (i % 2 === 0 ? '#fff' : '#fafafa');
+      tr.style.opacity = packed ? '0.6' : '1';
       tr.innerHTML = `
         <td style="padding:7px 12px; color:#aaa; font-size:11px;">${i+1}</td>
         <td style="padding:7px 12px; font-weight:bold; white-space:nowrap;">${o.name}</td>
@@ -1722,8 +1735,9 @@
         <td style="padding:7px 12px; font-size:11px; color:#2b5fa6;">${o.supp}</td>
         <td style="padding:7px 12px; font-weight:bold; color:#1a7a2a; text-align:right; white-space:nowrap;">$${o.total.toFixed(2)}</td>
         <td style="padding:7px 12px; text-align:center;">
-          <button onclick="markPacked(this, ${i})" style="background:${packed ? '#aaa' : '#1a7a2a'}; color:#fff; border:none; padding:4px 10px; border-radius:3px; font-size:11px; cursor:pointer; white-space:nowrap;" ${packed ? 'disabled' : ''}>
-            ${packed ? '✓ Done' : 'Pack'}
+          <button onclick="markPacked(this, ${i})" data-packed="${packed ? '1' : '0'}"
+            style="background:${packed ? '#888' : '#1a7a2a'}; color:#fff; border:none; padding:4px 10px; border-radius:3px; font-size:11px; cursor:pointer; white-space:nowrap;">
+            ${packed ? '↩ Undo' : 'Pack'}
           </button>
         </td>`;
       tbody.appendChild(tr);
@@ -1742,14 +1756,27 @@
   }
 
   function markPacked(btn, idx) {
-    packedSet.add(idx);
     const tr = btn.closest('tr');
-    tr.style.opacity = '0.5';
-    tr.style.background = '#f8f8f8';
-    tr.dataset.packed = '1';
-    btn.textContent = '✓ Done';
-    btn.style.background = '#aaa';
-    btn.disabled = true;
+    const isPacked = btn.dataset.packed === '1';
+    if (isPacked) {
+      // Undo
+      packedSet.delete(idx);
+      tr.style.opacity = '1';
+      tr.style.background = idx % 2 === 0 ? '#fff' : '#fafafa';
+      tr.dataset.packed = '0';
+      btn.textContent = 'Pack';
+      btn.style.background = '#1a7a2a';
+      btn.dataset.packed = '0';
+    } else {
+      // Mark packed
+      packedSet.add(idx);
+      tr.style.opacity = '0.6';
+      tr.style.background = '#f0f7f0';
+      tr.dataset.packed = '1';
+      btn.textContent = '↩ Undo';
+      btn.style.background = '#888';
+      btn.dataset.packed = '1';
+    }
     updatePendingBadge();
   }
 
