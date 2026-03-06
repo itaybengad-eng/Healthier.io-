@@ -443,15 +443,18 @@
             </div>
             <div class="form-row">
               <label>Email:</label>
-              <input type="email" id="patientEmail" value="" placeholder="patient@email.com" />
+              <input type="email" id="patientEmail" value="" placeholder="patient@email.com" style="border:1.5px solid #c8d8f0; background:#f5f9ff;" title="Override for demo" />
             </div>
             <div class="form-row">
               <label>Phone:</label>
-              <input type="text" id="patientPhone" value="" />
+              <div style="display:flex; gap:6px; align-items:center; flex:1;">
+                <input type="text" id="patientPhone" value="" style="border:1.5px solid #c8d8f0; background:#f5f9ff; flex:1;" title="Override for demo" />
+                <button onclick="sendWhatsApp()" title="Send WhatsApp to this number" style="background:#25D366; color:#fff; border:none; border-radius:4px; padding:4px 10px; font-size:12px; cursor:pointer; white-space:nowrap; font-weight:bold;">💬 WA</button>
+              </div>
             </div>
             <div class="form-row">
               <label>Year of Birth:</label>
-              <input type="text" id="patientDOB" value="" />
+              <input type="text" id="patientDOB" value="" style="border:1.5px solid #c8d8f0; background:#f5f9ff;" title="Override for demo" />
             </div>
           </div>
         </div>
@@ -1558,6 +1561,20 @@
     pvj.style.display = 'flex';
   }
 
+  function buildWhatsAppMessage() {
+    const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text.split(' ')[0];
+    const drugName = document.getElementById('itemSelect').value;
+    const supp = getSupplementForDrug(drugName);
+    return `Hi ${patientName} 👋 You picked up ${drugName} today at Concept Pharmacy.\n\nDid you know patients on ${drugName.split(' ')[0]} often benefit from ${supp.name}?\n\n${supp.reason}\n\nOrder online for same-day pickup 👉 conceptpharmacy.com/supplements`;
+  }
+
+  function sendWhatsApp() {
+    const phone = document.getElementById('patientPhone').value.replace(/\D/g, '');
+    if (!phone) { alert('Enter a phone number first'); return; }
+    const msg = encodeURIComponent(buildWhatsAppMessage());
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  }
+
   function pvjAccept() {
     document.getElementById('pvjOverlay').style.display = 'none';
     const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
@@ -1567,6 +1584,13 @@
 
     // Add to dashboard live row
     addLiveJourneyRow(patientName, drugName, supp.name);
+
+    // Open WhatsApp with pre-filled message
+    const phone = patientPhone.replace(/\D/g, '');
+    if (phone) {
+      const msg = encodeURIComponent(buildWhatsAppMessage());
+      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    }
 
     // Pulse SMS toggle orange
     const toggle = document.querySelector('.toggle input');
@@ -1582,7 +1606,7 @@
 
     // Show toast
     const toast = document.getElementById('smsToast');
-    document.getElementById('toastMsg').textContent = 'Sending to ' + patientPhone + ' in ~3 hours';
+    document.getElementById('toastMsg').textContent = 'WhatsApp sent to ' + patientPhone;
     toast.style.display = 'flex';
     toast.style.opacity = '1';
     setTimeout(() => {
