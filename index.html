@@ -1559,40 +1559,67 @@
     pvj.style.display = 'flex';
   }
 
-  function buildWhatsAppMessage() {
+  const TWILIO_SID   = 'AC8ec63202f8c96b6d36d85c0af03da291';
+  const TWILIO_TOKEN = 'PASTE_NEW_TOKEN_HERE';
+  const TWILIO_FROM  = '+16315964098';
+
+  function buildSmsMessage() {
     const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text.split(' ')[0];
     const drugName = document.getElementById('itemSelect').value;
     const supp = getSupplementForDrug(drugName);
-    return `Hi ${patientName} 👋 You picked up ${drugName} today at Concept Pharmacy.\n\nDid you know patients on ${drugName.split(' ')[0]} often benefit from ${supp.name}?\n\n${supp.reason}\n\nOrder online for same-day pickup 👉 conceptpharmacy.com/supplements`;
+    return `Hi ${patientName}, you picked up ${drugName.split(' ')[0]} today at Concept Pharmacy. Patients on this medication often benefit from ${supp.name} — ${supp.reason} Reply YES to reserve yours for pickup tomorrow.`;
+  }
+
+  async function sendTwilioSms(toNumber) {
+    const body = buildSmsMessage();
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
+    const params = new URLSearchParams({ To: toNumber, From: TWILIO_FROM, Body: body });
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+    return resp.ok;
   }
 
   function sendWhatsApp() {
-    const phone = document.getElementById('patientPhone').value.replace(/\D/g, '');
+    const phone = document.getElementById('patientPhone').value.trim();
     if (!phone) { alert('Enter a phone number first'); return; }
-    const msg = encodeURIComponent(buildWhatsAppMessage());
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    sendTwilioSms(phone).then(ok => {
+      alert(ok ? '✓ SMS sent to ' + phone : '✗ Failed — check Twilio credentials');
+    });
   }
 
   function pvjAccept() {
     document.getElementById('pvjOverlay').style.display = 'none';
     const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text;
-    const patientPhone = document.getElementById('patientPhone').value;
+    const patientPhone = document.getElementById('patientPhone').value.trim();
     const drugName = document.getElementById('itemSelect').value;
     const supp = getSupplementForDrug(drugName);
 
-    // Add to dashboard live row
     addLiveJourneyRow(patientName, drugName, supp.name);
 
-    // Open WhatsApp with pre-filled message
-    const phone = patientPhone.replace(/\D/g, '');
-    if (phone) {
-      const msg = encodeURIComponent(buildWhatsAppMessage());
-      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    // Send real SMS via Twilio
+    if (patientPhone) {
+      sendTwilioSms(patientPhone).then(ok => {
+        const toast = document.getElementById('smsToast');
+        document.getElementById('toastMsg').textContent = ok
+          ? '✓ SMS delivered to ' + patientPhone
+          : '✗ SMS failed — check Twilio credentials';
+        toast.style.display = 'flex';
+        toast.style.opacity = '1';
+        setTimeout(() => {
+          toast.style.transition = 'opacity 0.8s';
+          toast.style.opacity = '0';
+          setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 800);
+        }, 4000);
+      });
     }
 
-    // Pulse SMS toggle orange
-    const toggle = document.querySelector('.toggle input');
-    toggle.checked = true;
+    // Pulse SMS toggle
     const slider = document.querySelector('.slider');
     slider.style.transition = 'background 0.2s';
     let pulses = 0;
@@ -1601,17 +1628,6 @@
       pulses++;
       if (pulses > 5) { clearInterval(pulse); slider.style.background = '#ff6b00'; }
     }, 200);
-
-    // Show toast
-    const toast = document.getElementById('smsToast');
-    document.getElementById('toastMsg').textContent = 'WhatsApp sent to ' + patientPhone;
-    toast.style.display = 'flex';
-    toast.style.opacity = '1';
-    setTimeout(() => {
-      toast.style.transition = 'opacity 0.8s';
-      toast.style.opacity = '0';
-      setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 800);
-    }, 4000);
   }
 
   function pvjDecline() {
