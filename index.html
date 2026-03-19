@@ -362,7 +362,7 @@
   <button class="nav-btn" id="pvjNavBtn" onclick="showView('dashboard', this)" style="background:#e05c00; margin-left:8px;">📱 Post Visit Journey</button>
   <div class="spacer"></div>
   <div class="sms-wrap">
-    <span>💬 WhatsApp</span>
+    <span>📱 SMS</span>
     <label class="toggle">
       <input type="checkbox" checked />
       <span class="slider"></span>
@@ -983,13 +983,13 @@
         <div id="pvjSupplementReason" style="font-size:12px; color:#666; margin-top:4px;"></div>
       </div>
       <p style="font-size:12px; color:#888; margin-top:2px;">
-        A WhatsApp message with the offer will be sent to <strong id="pvjPhone"></strong> in ~3 hours. Include this customer in the journey?
+        An SMS with the offer will be sent to <strong id="pvjPhone"></strong> in ~3 hours. Include this customer in the journey?
       </p>
     </div>
     <!-- Buttons -->
     <div style="padding:14px 24px 20px; display:flex; gap:12px;">
       <button onclick="pvjDecline()" style="flex:1; background:#f0f0f0; color:#444; border:1px solid #ccc; padding:10px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer;">✕ No</button>
-      <button onclick="pvjAccept()" style="flex:2; background:#25D366; color:#fff; border:none; padding:10px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer;">💬 Yes, Send WhatsApp</button>
+      <button onclick="pvjAccept()" style="flex:2; background:#ff6b00; color:#fff; border:none; padding:10px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer;">📲 Yes, Send SMS</button>
     </div>
   </div>
 </div>
@@ -998,7 +998,7 @@
 <div id="smsToast" style="display:none; position:fixed; bottom:40px; right:30px; background:#1a1a1a; color:#fff; padding:12px 20px; border-radius:8px; font-size:13px; z-index:2000; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:flex; align-items:center; gap:10px; min-width:280px;">
   <span style="font-size:20px;">📲</span>
   <div>
-    <div style="font-weight:bold;">WhatsApp Sent</div>
+    <div style="font-weight:bold;">SMS Journey Scheduled</div>
     <div id="toastMsg" style="font-size:12px; color:#aaa; margin-top:2px;"></div>
   </div>
 </div>
@@ -1618,7 +1618,7 @@
 
   const TWILIO_SID   = 'AC8ec63202f8c96b6d36d85c0af03da291';
   const TWILIO_TOKEN = 'PASTE_NEW_TOKEN_HERE';
-  const TWILIO_FROM  = 'whatsapp:+14155238886'; // Twilio WhatsApp sandbox
+  const TWILIO_FROM  = '+16315964098';
 
   function buildSmsMessage() {
     const patientName = document.getElementById('patientSelect').options[document.getElementById('patientSelect').selectedIndex].text.split(' ')[0];
@@ -1630,7 +1630,7 @@
   async function sendTwilioSms(toNumber) {
     const body = buildSmsMessage();
     const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
-    const params = new URLSearchParams({ To: 'whatsapp:' + toNumber, From: TWILIO_FROM, Body: body });
+    const params = new URLSearchParams({ To: toNumber, From: TWILIO_FROM, Body: body });
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
@@ -1642,32 +1642,11 @@
     return resp.ok;
   }
 
-  function normalizePhone(raw) {
-    // Strip everything except digits and leading +
-    let digits = raw.replace(/[^\d+]/g, '');
-    // If already has +, trust it
-    if (digits.startsWith('+')) return digits;
-    // Israeli numbers: 05x = +9725x (10 digits starting with 0)
-    if (digits.startsWith('05') && digits.length === 10) return '+972' + digits.slice(1);
-    // US numbers: 10 digits
-    if (digits.length === 10) return '+1' + digits;
-    // US with country code: 11 digits starting with 1
-    if (digits.length === 11 && digits.startsWith('1')) return '+' + digits;
-    // Fallback: just prepend +
-    return '+' + digits;
-  }
-
   function sendWhatsApp() {
-    const raw = document.getElementById('patientPhone').value.trim();
-    if (!raw) { alert('Enter a phone number first'); return; }
-    const phone = normalizePhone(raw);
-    const btn = document.querySelector('button[onclick="sendWhatsApp()"]');
-    if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+    const phone = document.getElementById('patientPhone').value.trim();
+    if (!phone) { alert('Enter a phone number first'); return; }
     sendTwilioSms(phone).then(ok => {
-      if (btn) { btn.textContent = ok ? '✅' : '❌'; btn.disabled = false; setTimeout(() => { btn.textContent = '💬 WA'; }, 3000); }
-      if (!ok) alert('✗ Failed — check Twilio credentials or sandbox join');
-    }).catch(() => {
-      if (btn) { btn.textContent = '❌'; btn.disabled = false; setTimeout(() => { btn.textContent = '💬 WA'; }, 3000); }
+      alert(ok ? '✓ SMS sent to ' + phone : '✗ Failed — check Twilio credentials');
     });
   }
 
@@ -1685,8 +1664,8 @@
       sendTwilioSms(patientPhone).then(ok => {
         const toast = document.getElementById('smsToast');
         document.getElementById('toastMsg').textContent = ok
-          ? '✓ WhatsApp delivered to ' + patientPhone
-          : '✗ WhatsApp failed — check Twilio credentials';
+          ? '✓ SMS delivered to ' + patientPhone
+          : '✗ SMS failed — check Twilio credentials';
         toast.style.display = 'flex';
         toast.style.opacity = '1';
         setTimeout(() => {
