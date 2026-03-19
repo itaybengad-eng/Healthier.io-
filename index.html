@@ -841,8 +841,6 @@
 
   <!-- INVENTORY TAB -->
   <div id="dashTab-inventory" style="display:none; padding:20px 24px;">
-
-    <!-- Header -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
         <div style="font-size:18px; font-weight:bold; color:#1a1a2e;">📦 Supplement Inventory Tracker</div>
@@ -855,13 +853,9 @@
         <button onclick="setInvPeriod('month', this)" class="inv-period-btn" style="padding:5px 14px; border-radius:4px; border:1px solid #ccc; background:#fff; color:#444; font-size:12px; cursor:pointer;">This Month</button>
       </div>
     </div>
-
-    <!-- Alert banner (shown when thresholds are breached) -->
     <div id="invAlertBanner" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:6px; padding:10px 16px; margin-bottom:16px; font-size:12px; color:#856404;">
       <strong>⚠️ Reorder Alert:</strong> <span id="invAlertText"></span>
     </div>
-
-    <!-- Summary KPI strip -->
     <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;">
       <div style="background:#fff; border-radius:8px; padding:14px 16px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #2b5fa6;">
         <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Products Dispensed</div>
@@ -876,44 +870,31 @@
         <div id="invKpiAlerts" style="font-size:26px; font-weight:bold; color:#e05c1a;">0</div>
       </div>
       <div style="background:#fff; border-radius:8px; padding:14px 16px; box-shadow:0 1px 4px rgba(0,0,0,0.08); border-left:4px solid #888;">
-        <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Orders Packed Today</div>
+        <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Orders Packed</div>
         <div id="invKpiPacked" style="font-size:26px; font-weight:bold; color:#333;">0</div>
       </div>
     </div>
-
-    <!-- Help hint -->
     <div style="background:#e8f0fb; border:1px solid #c0d0ef; border-radius:5px; padding:8px 14px; font-size:11px; color:#1a3a6a; margin-bottom:14px;">
-      💡 Products appear here once you click <strong>Pack</strong> in the Fulfillment Queue. Set a threshold per product — you'll be alerted when dispensed units cross that number.
+      💡 Set a reorder threshold per product — you'll be alerted when dispensed units cross that number. Packing orders in the Fulfillment Queue updates these counts in real time.
     </div>
-
-    <!-- Table -->
     <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.08); overflow:hidden;">
-      <table style="width:100%; border-collapse:collapse; font-size:12px;" id="inventoryTable">
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead>
           <tr style="background:#2b5fa6; color:#fff;">
             <th style="padding:10px 14px; text-align:left;">Supplement</th>
-            <th style="padding:10px 14px; text-align:center; width:90px;">Units Dispensed</th>
-            <th style="padding:10px 14px; text-align:left;">Last Packed</th>
-            <th style="padding:10px 14px; text-align:center; width:200px;">Usage Bar</th>
-            <th style="padding:10px 14px; text-align:center; width:160px;">Reorder Threshold</th>
-            <th style="padding:10px 14px; text-align:center; width:90px;">Status</th>
+            <th style="padding:10px 14px; text-align:center; width:90px;">Units</th>
+            <th style="padding:10px 14px; text-align:left; width:140px;">Last Packed</th>
+            <th style="padding:10px 14px; text-align:center;">Usage</th>
+            <th style="padding:10px 14px; text-align:center; width:170px;">Reorder Threshold</th>
+            <th style="padding:10px 14px; text-align:center; width:100px;">Status</th>
           </tr>
         </thead>
-        <tbody id="inventoryTableBody">
-          <tr>
-            <td colspan="6" style="padding:40px; text-align:center; color:#aaa; font-size:13px;">
-              No packed orders yet. Go to <strong>Morning Fulfillment Queue</strong> and click <strong>Pack</strong> on some orders to see inventory here.
-            </td>
-          </tr>
-        </tbody>
+        <tbody id="inventoryTableBody"></tbody>
       </table>
     </div>
-
-    <div style="margin-top:10px; font-size:11px; color:#aaa; text-align:right;">
-      Thresholds are saved locally per session. Unit counts reflect packed orders in the selected period.
-    </div>
-
+    <div style="margin-top:10px; font-size:11px; color:#aaa; text-align:right;">Thresholds saved per session · Counts reflect packed orders in selected period</div>
   </div><!-- /dashTab-inventory -->
+
 
 </div><!-- /dashboardView -->
 
@@ -1833,9 +1814,7 @@
       const now = new Date();
       document.getElementById('dashDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
     }
-    if (tab === 'inventory') {
-      renderInventory();
-    }
+    if (tab === 'inventory') { renderInventory(); }
   }
 
   function initFulfillTable() {
@@ -1892,7 +1871,6 @@
       btn.textContent = 'Pack';
       btn.style.background = '#1a7a2a';
       btn.dataset.packed = '0';
-      // Untrack from inventory
       untrackPackedInventory(fulfillOrders[idx]);
     } else {
       // Mark packed
@@ -1903,7 +1881,6 @@
       btn.textContent = '↩ Undo';
       btn.style.background = '#888';
       btn.dataset.packed = '1';
-      // Track in inventory
       trackPackedInventory(fulfillOrders[idx]);
     }
     updatePendingBadge();
@@ -1967,14 +1944,74 @@
   }
 
   // ── INVENTORY SYSTEM ──
-  // inventoryData: { [supplementName]: { units: number, lastPacked: Date, timestamps: Date[] } }
-  let inventoryData = {};
-  // thresholds: { [supplementName]: number }
-  let inventoryThresholds = {};
   let invCurrentPeriod = 'today';
+  let inventoryThresholds = {
+    'CoQ10 200mg': 15,
+    'Omega-3 Fish Oil 1000mg': 20,
+    'Magnesium 400mg': 20,
+    'Vitamin D3 2000IU': 25,
+    'Probiotics 50B CFU': 10,
+    'Vitamin B12 1000mcg': 10,
+  };
+
+  function makeDemoTimes(countToday, countWeekExtra, countMonthExtra) {
+    const now = new Date();
+    const times = [];
+    for (let i = 0; i < countToday; i++) {
+      const t = new Date(now);
+      t.setHours(7 + Math.floor(i * (10 / Math.max(countToday,1))));
+      t.setMinutes(Math.floor(Math.random() * 59));
+      times.push(new Date(t));
+    }
+    for (let i = 0; i < countWeekExtra; i++) {
+      const t = new Date(now);
+      t.setDate(now.getDate() - (1 + (i % 6)));
+      t.setHours(8 + Math.floor(Math.random() * 9));
+      times.push(new Date(t));
+    }
+    for (let i = 0; i < countMonthExtra; i++) {
+      const t = new Date(now);
+      t.setDate(now.getDate() - (7 + (i % 22)));
+      t.setHours(8 + Math.floor(Math.random() * 9));
+      times.push(new Date(t));
+    }
+    return times;
+  }
+
+  const _demoRows = [
+    ['CoQ10 200mg',                       12, 28, 41, 9, 14],
+    ['Magnesium 400mg',                   11, 24, 38, 11, 22],
+    ['Omega-3 Fish Oil 1000mg',           10, 22, 35, 10, 6],
+    ['Vitamin D3 2000IU',                  9, 20, 31, 10, 57],
+    ['Probiotics 50B CFU',                 6, 13, 20, 11, 47],
+    ['Vitamin B12 1000mcg',                5, 11, 17, 9, 41],
+    ['Alpha Lipoic Acid 600mg',            4,  9, 14, 8, 48],
+    ['L-Theanine 200mg',                   4,  8, 13, 12, 44],
+    ['Calcium Citrate 500mg',              4,  8, 12, 11, 58],
+    ['Selenium 200mcg',                    3,  7, 11, 8, 34],
+    ['Potassium + Magnesium Complex',      3,  7, 10, 11, 34],
+    ['Vitamin K2 MK-7 100mcg',            3,  6, 10, 10, 19],
+    ['Turmeric Curcumin 500mg',            2,  5,  8, 9, 28],
+    ['B-Complex',                          2,  5,  8, 1, 4],
+    ['Vitamin C 500mg',                    2,  4,  7, 1, 43],
+    ['Saw Palmetto 320mg',                 2,  4,  6, 1, 29],
+    ['Zinc 15mg',                          2,  4,  6, 1, 29],
+    ['Melatonin 0.5mg',                    1,  3,  5, 1, 37],
+    ['Vitamin B6 50mg',                    1,  3,  4, 9, 28],
+  ];
+
+  let inventoryData = {};
+  (function initDemoInventory() {
+    const now = new Date();
+    _demoRows.forEach(([name, today, weekExtra, monthExtra, lh, lm]) => {
+      const timestamps = makeDemoTimes(today, weekExtra, monthExtra);
+      const lastPacked = new Date(now);
+      lastPacked.setHours(lh); lastPacked.setMinutes(lm); lastPacked.setSeconds(0);
+      inventoryData[name] = { units: today + weekExtra + monthExtra, lastPacked, timestamps };
+    });
+  })();
 
   function parseSupplements(suppStr) {
-    // Split "CoQ10 200mg + Vitamin D3 2000IU" into individual supplement names
     return suppStr.split('+').map(s => s.trim()).filter(Boolean);
   }
 
@@ -1982,12 +2019,10 @@
     const supps = parseSupplements(order.supp);
     const now = new Date();
     supps.forEach(supp => {
-      if (!inventoryData[supp]) {
-        inventoryData[supp] = { units: 0, lastPacked: null, timestamps: [] };
-      }
+      if (!inventoryData[supp]) inventoryData[supp] = { units: 0, lastPacked: null, timestamps: [] };
       inventoryData[supp].units++;
       inventoryData[supp].lastPacked = now;
-      inventoryData[supp].timestamps.push(now);
+      inventoryData[supp].timestamps.push(new Date(now));
     });
     checkThresholdAlerts();
   }
@@ -1997,10 +2032,7 @@
     supps.forEach(supp => {
       if (inventoryData[supp] && inventoryData[supp].units > 0) {
         inventoryData[supp].units--;
-        // Remove last timestamp
-        if (inventoryData[supp].timestamps.length > 0) {
-          inventoryData[supp].timestamps.pop();
-        }
+        if (inventoryData[supp].timestamps.length > 0) inventoryData[supp].timestamps.pop();
       }
     });
     checkThresholdAlerts();
@@ -2010,42 +2042,31 @@
     if (!inventoryData[suppName]) return 0;
     const now = new Date();
     const ts = inventoryData[suppName].timestamps;
-    if (invCurrentPeriod === 'today') {
-      return ts.filter(t => t.toDateString() === now.toDateString()).length;
-    } else if (invCurrentPeriod === 'week') {
-      const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-      return ts.filter(t => t >= weekAgo).length;
-    } else {
-      const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-      return ts.filter(t => t >= monthAgo).length;
-    }
+    if (invCurrentPeriod === 'today') return ts.filter(t => t.toDateString() === now.toDateString()).length;
+    if (invCurrentPeriod === 'week') { const w = new Date(now - 7*864e5); return ts.filter(t => t >= w).length; }
+    const m = new Date(now - 30*864e5); return ts.filter(t => t >= m).length;
   }
 
   function checkThresholdAlerts() {
     const alerts = [];
     Object.keys(inventoryThresholds).forEach(supp => {
-      const threshold = inventoryThresholds[supp];
-      const units = inventoryData[supp] ? inventoryData[supp].units : 0;
-      if (units >= threshold) {
-        alerts.push(`${supp} reached ${units} units (threshold: ${threshold})`);
-      }
+      const t = inventoryThresholds[supp];
+      const u = getFilteredUnits(supp);
+      if (u >= t) alerts.push(supp + ' (' + u + ' units, threshold ' + t + ')');
     });
     const banner = document.getElementById('invAlertBanner');
-    if (banner) {
-      if (alerts.length > 0) {
-        banner.style.display = 'block';
-        document.getElementById('invAlertText').textContent = alerts.join(' · ');
-      } else {
-        banner.style.display = 'none';
-      }
+    if (!banner) return;
+    if (alerts.length) {
+      banner.style.display = 'block';
+      document.getElementById('invAlertText').textContent = alerts.join(' · ');
+    } else {
+      banner.style.display = 'none';
     }
   }
 
   function setInvPeriod(period, btn) {
     invCurrentPeriod = period;
-    document.querySelectorAll('.inv-period-btn').forEach(b => {
-      b.style.background = '#fff'; b.style.color = '#444';
-    });
+    document.querySelectorAll('.inv-period-btn').forEach(b => { b.style.background = '#fff'; b.style.color = '#444'; });
     btn.style.background = '#2b5fa6'; btn.style.color = '#fff';
     renderInventory();
   }
@@ -2053,69 +2074,55 @@
   function renderInventory() {
     const tbody = document.getElementById('inventoryTableBody');
     if (!tbody) return;
-
     const supps = Object.keys(inventoryData);
-    if (supps.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="padding:40px; text-align:center; color:#aaa; font-size:13px;">
-        No packed orders yet. Go to <strong>Morning Fulfillment Queue</strong> and click <strong>Pack</strong> on some orders to see inventory here.
-      </td></tr>`;
-      document.getElementById('invKpiProducts').textContent = '0';
-      document.getElementById('invKpiUnits').textContent = '0';
-      document.getElementById('invKpiAlerts').textContent = '0';
-      document.getElementById('invKpiPacked').textContent = packedSet.size;
-      return;
-    }
-
-    // Sort by units desc
-    const sorted = supps.sort((a, b) => (inventoryData[b].units) - (inventoryData[a].units));
-
-    let totalUnits = 0;
-    let alertCount = 0;
-    const maxUnits = Math.max(...sorted.map(s => getFilteredUnits(s)), 1);
+    let totalUnits = 0, alertCount = 0;
+    const filteredCounts = {};
+    supps.forEach(s => { filteredCounts[s] = getFilteredUnits(s); totalUnits += filteredCounts[s]; });
+    const maxUnits = Math.max(...Object.values(filteredCounts), 1);
+    const sorted = supps.sort((a,b) => filteredCounts[b] - filteredCounts[a]);
 
     tbody.innerHTML = '';
     sorted.forEach(supp => {
-      const filteredUnits = getFilteredUnits(supp);
-      totalUnits += filteredUnits;
+      const units = filteredCounts[supp];
       const threshold = inventoryThresholds[supp] || '';
       const lastPacked = inventoryData[supp].lastPacked;
-      const lastStr = lastPacked ? lastPacked.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' · ' + lastPacked.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—';
-      const barPct = Math.min(100, Math.round((filteredUnits / maxUnits) * 100));
+      const lastStr = lastPacked
+        ? lastPacked.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' · ' + lastPacked.toLocaleDateString('en-US', {month:'short', day:'numeric'})
+        : '—';
+      const barPct = Math.min(100, Math.round((units / maxUnits) * 100));
 
-      let statusHtml = '<span style="background:#e8f5e9; color:#1a7a2a; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold;">OK</span>';
+      let statusHtml = '<span style="background:#e8f5e9; color:#1a7a2a; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold;">✓ OK</span>';
       let barColor = '#2b5fa6';
-      if (threshold && filteredUnits >= threshold) {
+      if (threshold && units >= threshold) {
         statusHtml = '<span style="background:#fdecea; color:#c0392b; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold;">⚠ Reorder</span>';
-        barColor = '#e05c1a';
-        alertCount++;
-      } else if (threshold && filteredUnits >= threshold * 0.8) {
+        barColor = '#e05c1a'; alertCount++;
+      } else if (threshold && units >= threshold * 0.8) {
         statusHtml = '<span style="background:#fff3e0; color:#e65100; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold;">↑ Nearing</span>';
         barColor = '#f5a623';
       }
 
+      const safeSupp = supp.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid #f0f0f0';
-      tr.innerHTML = `
-        <td style="padding:10px 14px; font-weight:600; color:#222;">${supp}</td>
-        <td style="padding:10px 14px; text-align:center; font-size:18px; font-weight:bold; color:#2b5fa6;">${filteredUnits}</td>
-        <td style="padding:10px 14px; color:#888; font-size:11px;">${lastStr}</td>
+      tr.innerHTML = \`
+        <td style="padding:10px 14px; font-weight:600; color:#222;">\${supp}</td>
+        <td style="padding:10px 14px; text-align:center; font-size:20px; font-weight:bold; color:#2b5fa6;">\${units}</td>
+        <td style="padding:10px 14px; color:#888; font-size:11px;">\${lastStr}</td>
         <td style="padding:10px 14px;">
-          <div style="background:#eee; border-radius:4px; height:8px; position:relative;">
-            <div style="background:${barColor}; width:${barPct}%; height:8px; border-radius:4px; transition:width 0.4s;"></div>
+          <div style="background:#eee; border-radius:4px; height:8px;">
+            <div style="background:\${barColor}; width:\${barPct}%; height:8px; border-radius:4px; transition:width 0.4s;"></div>
           </div>
-          <div style="font-size:10px; color:#aaa; margin-top:2px;">${filteredUnits} unit${filteredUnits !== 1 ? 's' : ''} in period</div>
+          <div style="font-size:10px; color:#aaa; margin-top:2px;">\${units} unit\${units !== 1 ? 's' : ''} in period</div>
         </td>
         <td style="padding:10px 14px; text-align:center;">
-          <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-            <input type="number" min="1" placeholder="e.g. 20"
-              value="${threshold}"
-              onchange="setThreshold('${supp.replace(/'/g, "\\'")}', this.value)"
-              style="width:70px; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; text-align:center;"
-              title="Alert me when this many units have been dispensed" />
+          <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+            <input type="number" min="1" placeholder="e.g. 20" value="\${threshold}"
+              onchange="setThreshold('\${safeSupp}', this.value)"
+              style="width:65px; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:12px; text-align:center;" />
             <span style="font-size:10px; color:#aaa;">units</span>
           </div>
         </td>
-        <td style="padding:10px 14px; text-align:center;">${statusHtml}</td>`;
+        <td style="padding:10px 14px; text-align:center;">\${statusHtml}</td>\`;
       tbody.appendChild(tr);
     });
 
@@ -2128,13 +2135,11 @@
 
   function setThreshold(supp, val) {
     const n = parseInt(val);
-    if (n > 0) {
-      inventoryThresholds[supp] = n;
-    } else {
-      delete inventoryThresholds[supp];
-    }
+    if (n > 0) inventoryThresholds[supp] = n;
+    else delete inventoryThresholds[supp];
     renderInventory();
   }
+
 </script>
 
 </body>
